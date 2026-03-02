@@ -1,0 +1,2104 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>大脚板丛のPlog编辑器</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=ZCOOL+QingKe+HuangYou&family=Noto+Sans+SC:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    @font-face {
+      font-family: "SourceHanSansCNLight";
+      src: url("./assets/fonts/SourceHanSansCN-Light.otf") format("opentype");
+      font-display: swap;
+    }
+    @font-face {
+      font-family: "YeGenYouTangKai";
+      src: url("./assets/fonts/yegengyou-tangkai.ttf") format("truetype");
+      font-display: swap;
+    }
+    @font-face {
+      font-family: "LiXuKeCalligraphy";
+      src: url("./assets/fonts/lixuke-calligraphy.ttf") format("truetype");
+      font-display: swap;
+    }
+    @font-face {
+      font-family: "TheNightWatch";
+      src: url("./assets/fonts/the-night-watch.ttf") format("truetype");
+      font-display: swap;
+    }
+    @font-face {
+      font-family: "VoltairVoltaire";
+      src: url("./assets/fonts/voltair-voltaire.ttf") format("truetype");
+      font-display: swap;
+    }
+    @font-face {
+      font-family: "RockvilleSolid";
+      src: url("./assets/fonts/rockville-solid.otf") format("opentype");
+      font-display: swap;
+    }
+    :root {
+      --bg: #fffef5;
+      --card: #F7EOC1;
+      --panel: #fffdf0;
+      --pink: #f79fc9;
+      --pink-deep: #db6ea9;
+      --ink: #2d2a26;
+      --accent: #6dd6ff;
+      --ok: #6fe08f;
+      --frame: #F7C9BF;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: linear-gradient(180deg, #fffdf4 0%, #fff6c8 100%);
+      color: var(--ink);
+      font-family: "ZCOOL QingKe HuangYou", "Noto Sans SC", sans-serif;
+      min-height: 100dvh;
+    }
+
+    .wrap {
+      width: min(1040px, 100%);
+      margin: 0 auto;
+      padding: 14px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .pixel-card {
+      background: var(--card);
+      border: 3px solid var(--frame);
+      box-shadow:
+        0 0 0 3px #fff3da,
+        0 0 0 6px var(--frame),
+        6px 6px 0 #e4b6ad;
+      border-radius: 10px;
+      padding: 12px;
+    }
+
+    .title-box {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+      font-size: clamp(20px, 5vw, 34px);
+      color: #ffe5f1;
+      text-shadow:
+        -2px 0 var(--pink-deep),
+        0 2px var(--pink-deep),
+        2px 0 var(--pink-deep),
+        0 -2px var(--pink-deep),
+        3px 3px 0 #ffffff;
+      letter-spacing: 1px;
+      line-height: 1.2;
+    }
+
+    .title-heart { color: var(--pink); }
+
+    .layout {
+      display: grid;
+      gap: 12px;
+    }
+
+    .row { display: grid; gap: 10px; }
+
+    label {
+      font-size: 13px;
+      color: #6a5d4e;
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    textarea,
+    select,
+    input[type="file"] {
+      width: 100%;
+      border: 3px solid #d8c39b;
+      border-radius: 8px;
+      background: #fffef7;
+      padding: 9px;
+      font-size: 15px;
+      font-family: "Noto Sans SC", sans-serif;
+      color: #332c24;
+      outline: none;
+    }
+
+    textarea {
+      min-height: 150px;
+      resize: vertical;
+      line-height: 1.6;
+    }
+    input[type="range"] {
+      width: 100%;
+      margin: 0;
+      padding: 0;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      appearance: none;
+      -webkit-appearance: none;
+      height: 24px;
+    }
+    input[type="range"]::-webkit-slider-runnable-track {
+      height: 8px;
+      border-radius: 999px;
+      background: #e9d8b5;
+      border: 2px solid #d8c39b;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      margin-top: -8px;
+      background: #ffffff;
+      border: 3px solid #b8906a;
+      box-shadow: 1px 1px 0 #8f765e;
+    }
+    input[type="range"]::-moz-range-track {
+      height: 8px;
+      border-radius: 999px;
+      background: #e9d8b5;
+      border: 2px solid #d8c39b;
+    }
+    input[type="range"]::-moz-range-thumb {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #ffffff;
+      border: 3px solid #b8906a;
+      box-shadow: 1px 1px 0 #8f765e;
+    }
+
+    .grid2 {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .top-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .top-main {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+      min-width: 0;
+    }
+    .top-main > div:first-child {
+      flex: 1;
+      min-width: 180px;
+    }
+
+    .live-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #fffef5;
+      border: 3px solid #dacaa8;
+      border-radius: 999px;
+      padding: 4px 10px;
+      font-size: 12px;
+    }
+
+    .live-chip {
+      min-width: 52px;
+      text-align: center;
+      border-radius: 999px;
+      border: 2px solid #6e634f;
+      background: #fbf5de;
+      color: #4e4438;
+      padding: 2px 8px;
+      font-family: "Press Start 2P", monospace;
+      font-size: 9px;
+      letter-spacing: 0.2px;
+    }
+
+    .live-chip.on {
+      background: #d8ffd7;
+      color: #154f18;
+      border-color: #1f7a29;
+      box-shadow: 0 0 0 2px #b4f5b4 inset;
+    }
+
+    .actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .actions-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .actions-left {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+      flex: 1;
+    }
+    .mini-btn {
+      padding: 7px 10px;
+      font-size: 12px;
+      border-color: #6a7d92;
+      background: #eef7ff;
+    }
+    details.panel-fold {
+      border: 2px solid #d8c39b;
+      border-radius: 8px;
+      background: #fffdf0;
+      padding: 6px 8px;
+    }
+    details.panel-fold > summary {
+      cursor: pointer;
+      font-size: 14px;
+      color: #5f5648;
+      user-select: none;
+      list-style: none;
+    }
+    details.panel-fold > summary::-webkit-details-marker { display: none; }
+    details.panel-fold > summary::before {
+      content: '▸ ';
+      color: #7d6a54;
+    }
+    details.panel-fold[open] > summary::before { content: '▾ '; }
+    .multi-toolbar {
+      position: fixed;
+      left: 50%;
+      transform: translateX(-50%);
+      bottom: calc(max(14px, env(safe-area-inset-bottom)) + 12px);
+      z-index: 31;
+      background: rgba(34, 30, 25, 0.92);
+      border: 2px solid rgba(255,255,255,0.85);
+      border-radius: 12px;
+      padding: 8px;
+      display: none;
+      gap: 6px;
+      align-items: center;
+      box-shadow: 0 8px 18px rgba(0,0,0,0.24);
+    }
+    .multi-toolbar.show { display: inline-flex; }
+
+    button {
+      border: 3px solid #7a5b62;
+      border-radius: 9px;
+      padding: 8px 12px;
+      cursor: pointer;
+      font-size: 14px;
+      font-family: "ZCOOL QingKe HuangYou", "Noto Sans SC", sans-serif;
+      background: #fffef8;
+      color: #2e2a25;
+      box-shadow: 3px 3px 0 #c6b07d;
+    }
+
+    button:active {
+      transform: translate(1px, 1px);
+      box-shadow: 2px 2px 0 #c6b07d;
+    }
+
+    .pink {
+      background: #ffd3ea;
+      border-color: #b05a8f;
+    }
+
+    .green {
+      background: #ddffe3;
+      border-color: #4e9160;
+    }
+
+    .blue {
+      background: #d3f6ff;
+      border-color: #4e90a2;
+    }
+
+    .yellow {
+      background: #FFDDBC;
+      border-color: #bda972;
+    }
+
+    .preview {
+      background: var(--panel);
+      border: 3px solid var(--frame);
+      border-radius: 10px;
+      padding: 8px;
+      display: grid;
+      place-items: center;
+      overflow: auto;
+    }
+
+    canvas {
+      width: min(100%, 460px);
+      height: auto;
+      border: 3px solid #b2a9a0;
+      border-radius: 8px;
+      background: #f8f8f8;
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+      touch-action: none;
+    }
+
+    .footer {
+      text-align: center;
+      font-size: 12px;
+      color: #7f6d55;
+      padding: 2px 0 14px;
+    }
+
+    @media (min-width: 920px) {
+      .layout {
+        grid-template-columns: 1.35fr 0.85fr;
+      }
+    }
+
+    @media (max-width: 760px) {
+      .grid2 {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="pixel-card">
+      <div class="title-box"><span class="title-heart">❤</span> 大脚板丛のPlog编辑器 <span class="title-heart">❤</span></div>
+    </div>
+
+    <div class="layout">
+      <div class="pixel-card row">
+        <div class="top-row">
+          <div class="top-main">
+            <div>
+              <label>导入主图（支持 HEIC）</label>
+              <input id="imageInput" type="file" accept="image/*,.heic,.heif" />
+            </div>
+          </div>
+          <div class="live-toggle" title="当前浏览器无法直接输出 Live 动图，开关用于标记状态与排版流程。">
+            <span>Live：</span>
+            <button id="liveToggle" class="live-chip" type="button">OFF</button>
+          </div>
+        </div>
+
+        <div>
+          <label>文字内容（每行一个文字框，回车换行会新增独立框）</label>
+          <textarea id="bodyInput" placeholder="第一行文字\n第二行文字\n第三行文字"></textarea>
+        </div>
+
+        <details class="panel-fold">
+          <summary>文字样式设置</summary>
+          <div class="grid2" style="margin-top:8px;">
+            <div>
+              <label>风格</label>
+              <select id="styleSelect">
+                <option value="nobg">无背景</option>
+                <option value="blackwhite">黑底白字</option>
+                <option value="whiteblack">白底黑字</option>
+              </select>
+              <label for="alphaRange" style="margin-top:8px;">背景透明度：<span id="alphaValue">100%</span></label>
+              <input id="alphaRange" type="range" min="0" max="100" value="100" />
+            </div>
+            <div>
+              <label>字体</label>
+              <select id="fontSelect">
+                <option value="builtin-sourcehan-light">默认字体</option>
+                <option value="yegengyou-tangkai">叶根友唐楷简</option>
+                <option value="lixuke-calligraphy">李旭科书法</option>
+                <option value="the-night-watch">The Night Watch</option>
+                <option value="voltair-voltaire">Voltair Voltaire</option>
+                <option value="rockville-solid">Rockville Solid</option>
+                <option value="upload-font">导入自定义字体</option>
+              </select>
+              <input id="fontFileInput" type="file" accept=".ttf,.otf,.woff,.woff2" style="display:none" />
+            </div>
+          </div>
+        </details>
+
+        <div class="actions-top">
+          <div class="actions-left">
+            <button class="green" id="undoBtn" type="button">上一步</button>
+            <button class="yellow" id="redoBtn" type="button">下一步</button>
+            <button class="blue" id="addOverlayBtn" type="button">导入图片</button>
+            <input id="overlayInput" type="file" accept="image/*,.heic,.heif" style="display:none" />
+          </div>
+          <button class="pink" id="downloadBtn" type="button">下载图片</button>
+        </div>
+      </div>
+
+      <div class="preview">
+        <canvas id="canvas" width="1080" height="1350"></canvas>
+      </div>
+    </div>
+
+    <p class="footer">说明：Live 开关目前是标记状态；浏览器版暂不直接导出 iPhone Live Photo 动图。</p>
+  </div>
+  <div id="multiToolbar" class="multi-toolbar">
+    <button id="alignLeftBtn" class="mini-btn" type="button">左对齐</button>
+    <button id="alignCenterBtn" class="mini-btn" type="button">水平居中</button>
+    <button id="alignRightBtn" class="mini-btn" type="button">右对齐</button>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/heic2any/dist/heic2any.min.js"></script>
+  <script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const EMOJI_FONT_STACK = '"Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Twemoji Mozilla", sans-serif';
+    const EMOJI_RE = /\p{Extended_Pictographic}/u;
+
+    const FONT_FAMILIES = {
+      'builtin-sourcehan-light': `"SourceHanSansCNLight", "Source Han Sans SC", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", ${EMOJI_FONT_STACK}`,
+      'yegengyou-tangkai': `"YeGenYouTangKai", "Noto Sans SC", "PingFang SC", ${EMOJI_FONT_STACK}`,
+      'lixuke-calligraphy': `"LiXuKeCalligraphy", "Noto Sans SC", "PingFang SC", ${EMOJI_FONT_STACK}`,
+      'the-night-watch': `"TheNightWatch", "Noto Sans SC", "PingFang SC", ${EMOJI_FONT_STACK}`,
+      'voltair-voltaire': `"VoltairVoltaire", "Noto Sans SC", "PingFang SC", ${EMOJI_FONT_STACK}`,
+      'rockville-solid': `"RockvilleSolid", "Noto Sans SC", "PingFang SC", ${EMOJI_FONT_STACK}`
+    };
+
+    const STYLE_CONFIGS = {
+      blackwhite: {
+      bodyWeight: 700,
+      letterSpacing: 5,
+      lineHeight: 1.14,
+      textColor: '#ffffff',
+      panel: {
+        rgb: '0,0,0',
+        defaultAlpha: 1,
+        radius: 0,
+        padX: 9,
+        padY: 6
+      },
+      usePanel: true,
+      textShadowBlur: 0
+      },
+      whiteblack: {
+      bodyWeight: 700,
+      letterSpacing: 5,
+      lineHeight: 1.14,
+      textColor: '#000000',
+      panel: {
+        rgb: '255,255,255',
+        defaultAlpha: 1,
+        radius: 0,
+        padX: 9,
+        padY: 6
+      },
+      usePanel: true,
+      textShadowBlur: 0
+      },
+      nobg: {
+      bodyWeight: 700,
+      letterSpacing: 5,
+      lineHeight: 1.14,
+      textColor: '#ffffff',
+      panel: {
+        rgb: '0,0,0',
+        defaultAlpha: 0,
+        radius: 0,
+        padX: 0,
+        padY: 0
+      },
+      usePanel: false,
+      textShadowBlur: 0
+      }
+    };
+
+    const CONTROL_UI = {
+      selectionGap: 7,
+      resizeHandleSize: 16,
+      rotateHandleRadius: 13,
+      deleteHandleRadius: 13
+    };
+
+    const STORAGE_IMPORTED_FONTS = 'plog_editor_imported_fonts_v1';
+    const STORAGE_SELECTED_FONT = 'plog_editor_selected_font_v1';
+    const FONT_DB_NAME = 'plog_editor_font_db_v1';
+    const FONT_DB_STORE = 'fonts';
+
+    const imageInput = document.getElementById('imageInput');
+    const bodyInput = document.getElementById('bodyInput');
+    const styleSelect = document.getElementById('styleSelect');
+    const alphaRange = document.getElementById('alphaRange');
+    const alphaValue = document.getElementById('alphaValue');
+    const fontSelect = document.getElementById('fontSelect');
+    const fontFileInput = document.getElementById('fontFileInput');
+    const liveToggle = document.getElementById('liveToggle');
+    const addOverlayBtn = document.getElementById('addOverlayBtn');
+    const overlayInput = document.getElementById('overlayInput');
+    const undoBtn = document.getElementById('undoBtn');
+    const redoBtn = document.getElementById('redoBtn');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const alignLeftBtn = document.getElementById('alignLeftBtn');
+    const alignCenterBtn = document.getElementById('alignCenterBtn');
+    const alignRightBtn = document.getElementById('alignRightBtn');
+    const multiToolbar = document.getElementById('multiToolbar');
+
+    let baseImage = null;
+    let baseImageSrc = '';
+    let isLive = false;
+
+    // text: { text, x, y, scale, angle }
+    let textLayers = [];
+    // overlay: { src, img, x, y, w, h, angle }
+    let overlayLayers = [];
+
+    let selected = null; // { kind: 'text'|'overlay', index: number }
+    let multiSelected = [];
+    let interaction = null;
+
+    let textLayouts = [];
+    let overlayLayouts = [];
+    let activeGuides = [];
+
+    let previousFontValue = 'builtin-sourcehan-light';
+    let importedFonts = [];
+    let longPressTimer = null;
+    let longPressTriggered = false;
+    const LONG_PRESS_MS = 380;
+    const TAP_MOVE_TOLERANCE = 6;
+
+    let isApplyingHistory = false;
+    const historyStack = [];
+    const redoStack = [];
+
+    function getStyleConfig(styleId) {
+      return STYLE_CONFIGS[styleId || styleSelect.value] || STYLE_CONFIGS.blackwhite;
+    }
+
+    function getDefaultPanelAlpha(styleId) {
+      const cfg = getStyleConfig(styleId);
+      return typeof cfg.panel.defaultAlpha === 'number' ? cfg.panel.defaultAlpha : 0.9;
+    }
+
+    function getFontStack() {
+      return FONT_FAMILIES[fontSelect.value] || FONT_FAMILIES['builtin-sourcehan-light'];
+    }
+
+    function setLiveChip() {
+      liveToggle.textContent = isLive ? 'LIVE' : 'OFF';
+      liveToggle.classList.toggle('on', isLive);
+    }
+
+    function drawPlaceholder() {
+      updatePreviewFrameForCanvas();
+      ctx.fillStyle = '#f2f2f2';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = '#777';
+      ctx.font = `700 42px ${getFontStack()}`;
+      ctx.textAlign = 'center';
+      ctx.fillText('先导入一张主图', canvas.width / 2, canvas.height / 2);
+    }
+
+    function drawImageCover(img) {
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    }
+
+    function setCanvasSizeFromImage(img) {
+      if (!img) return;
+      if (canvas.width !== img.width || canvas.height !== img.height) {
+        canvas.width = img.width;
+        canvas.height = img.height;
+      }
+      updatePreviewFrameForCanvas();
+    }
+
+    function updatePreviewFrameForCanvas() {
+      const preview = canvas.parentElement;
+      if (!preview) return;
+      const availableW = Math.max(180, preview.clientWidth - 18);
+      const maxW = Math.min(availableW, 460);
+      const maxH = Math.max(220, Math.min(window.innerHeight * 0.62, 760));
+      const ratio = canvas.width / canvas.height;
+      let drawW = maxW;
+      let drawH = drawW / ratio;
+      if (drawH > maxH) {
+        drawH = maxH;
+        drawW = drawH * ratio;
+      }
+      canvas.style.width = `${Math.max(140, drawW)}px`;
+      canvas.style.height = `${Math.max(140, drawH)}px`;
+    }
+
+    function applyOverlay() {
+      // Keep original image clean. No global style overlay applied.
+    }
+
+    function drawRoundedRectPath(x, y, w, h, r) {
+      const radius = Math.min(r, w / 2, h / 2);
+      ctx.beginPath();
+      ctx.moveTo(x + radius, y);
+      ctx.lineTo(x + w - radius, y);
+      ctx.quadraticCurveTo(x + w, y, x + w, y + radius);
+      ctx.lineTo(x + w, y + h - radius);
+      ctx.quadraticCurveTo(x + w, y + h, x + w - radius, y + h);
+      ctx.lineTo(x + radius, y + h);
+      ctx.quadraticCurveTo(x, y + h, x, y + h - radius);
+      ctx.lineTo(x, y + radius);
+      ctx.quadraticCurveTo(x, y, x + radius, y);
+      ctx.closePath();
+    }
+
+    function splitGraphemes(text) {
+      if (!text) return [];
+      if (typeof Intl !== 'undefined' && Intl.Segmenter) {
+        const seg = new Intl.Segmenter('zh', { granularity: 'grapheme' });
+        return Array.from(seg.segment(text), s => s.segment);
+      }
+      return Array.from(text);
+    }
+
+    function isEmojiGrapheme(g) {
+      return EMOJI_RE.test(g);
+    }
+
+    function measureLineMetrics(text, font, emojiFont, letterSpacing) {
+      const gs = splitGraphemes(text);
+      if (!gs.length) {
+        const fallbackAsc = parseInt(font, 10) * 0.76 || 20;
+        const fallbackDesc = parseInt(font, 10) * 0.24 || 6;
+        return { minLeft: 0, maxRight: 0, visualWidth: 0, ascent: fallbackAsc, descent: fallbackDesc, graphemes: [] };
+      }
+      let cursorX = 0;
+      let minLeft = Number.POSITIVE_INFINITY;
+      let maxRight = Number.NEGATIVE_INFINITY;
+      let ascent = 0;
+      let descent = 0;
+      for (let i = 0; i < gs.length; i += 1) {
+        ctx.font = isEmojiGrapheme(gs[i]) ? emojiFont : font;
+        const m = ctx.measureText(gs[i]);
+        const l = typeof m.actualBoundingBoxLeft === 'number' ? m.actualBoundingBoxLeft : 0;
+        const r = typeof m.actualBoundingBoxRight === 'number' ? m.actualBoundingBoxRight : m.width;
+        const a = typeof m.actualBoundingBoxAscent === 'number' ? m.actualBoundingBoxAscent : 0;
+        const d = typeof m.actualBoundingBoxDescent === 'number' ? m.actualBoundingBoxDescent : 0;
+        minLeft = Math.min(minLeft, cursorX - l);
+        maxRight = Math.max(maxRight, cursorX + r);
+        ascent = Math.max(ascent, a);
+        descent = Math.max(descent, d);
+        cursorX += m.width;
+        if (i < gs.length - 1) cursorX += letterSpacing;
+      }
+      if (!Number.isFinite(minLeft)) minLeft = 0;
+      if (!Number.isFinite(maxRight)) maxRight = 0;
+      if (ascent <= 0) ascent = (parseInt(font, 10) || 24) * 0.76;
+      if (descent <= 0) descent = (parseInt(font, 10) || 24) * 0.24;
+      return { minLeft, maxRight, visualWidth: Math.max(0, maxRight - minLeft), ascent, descent, graphemes: gs };
+    }
+
+    function drawTextWithSpacing(text, x, y, font, letterSpacing, emojiFont) {
+      const gs = splitGraphemes(text);
+      if (!gs.length) return;
+      let cursorX = x;
+      for (let i = 0; i < gs.length; i += 1) {
+        ctx.font = isEmojiGrapheme(gs[i]) ? emojiFont : font;
+        ctx.fillText(gs[i], cursorX, y);
+        const m = ctx.measureText(gs[i]);
+        cursorX += m.width;
+        if (i < gs.length - 1) cursorX += letterSpacing;
+      }
+    }
+
+    function wrapByWidth(text, font, emojiFont, maxWidth, letterSpacing, maxLines) {
+      const gs = splitGraphemes(text);
+      const lines = [];
+      let lineGs = [];
+      for (const ch of gs) {
+        const testGs = [...lineGs, ch];
+        const test = testGs.join('');
+        if (measureLineMetrics(test, font, emojiFont, letterSpacing).visualWidth <= maxWidth) {
+          lineGs = testGs;
+        } else {
+          if (lineGs.length) lines.push(lineGs.join(''));
+          lineGs = [ch];
+          if (lines.length >= maxLines) break;
+        }
+      }
+      if (lineGs.length && lines.length < maxLines) lines.push(lineGs.join(''));
+      return lines;
+    }
+
+    function rotatePoint(localX, localY, angle) {
+      const c = Math.cos(angle);
+      const s = Math.sin(angle);
+      return { x: localX * c - localY * s, y: localX * s + localY * c };
+    }
+
+    function localFromWorld(px, py, cx, cy, angle) {
+      const dx = px - cx;
+      const dy = py - cy;
+      const c = Math.cos(angle);
+      const s = Math.sin(angle);
+      return { x: dx * c + dy * s, y: -dx * s + dy * c };
+    }
+
+    function getSelectionControlPoints(layout) {
+      const gap = CONTROL_UI.selectionGap;
+      const fw = layout.w + gap * 2;
+      const fh = layout.h + gap * 2;
+      const tl = rotatePoint(-fw / 2, -fh / 2, layout.angle);
+      const tr = rotatePoint(fw / 2, -fh / 2, layout.angle);
+      const br = rotatePoint(fw / 2, fh / 2, layout.angle);
+      return {
+        delete: { x: layout.cx + tl.x, y: layout.cy + tl.y },
+        resize: { x: layout.cx + tr.x, y: layout.cy + tr.y },
+        rotate: { x: layout.cx + br.x, y: layout.cy + br.y },
+        frame: { fw, fh }
+      };
+    }
+
+    function pointInRotatedLayout(p, layout) {
+      const local = localFromWorld(p.x, p.y, layout.cx, layout.cy, layout.angle);
+      return Math.abs(local.x) <= layout.w / 2 && Math.abs(local.y) <= layout.h / 2;
+    }
+
+    function parseLines() {
+      return bodyInput.value.split('\n').map(t => t.trim()).filter(Boolean);
+    }
+
+    function syncTextLayers(lines) {
+      const next = [];
+      for (let i = 0; i < lines.length; i += 1) {
+        const prev = textLayers[i];
+        if (prev) {
+          next.push({ ...prev, text: lines[i] });
+        } else {
+          const prevLayer = next[i - 1] || textLayers[i - 1] || null;
+          const prevLayout = textLayouts[i - 1] || null;
+          const flowGap = 14;
+          const flowX = prevLayer ? prevLayer.x : 70;
+          const flowY = prevLayer
+            ? (prevLayer.y + (prevLayout ? prevLayout.h : Math.max(56, Math.round(96 * (prevLayer.scale || 1)))) + flowGap)
+            : Math.max(8, canvas.height - 340 + i * 116);
+          next.push({
+            text: lines[i],
+            x: Math.max(0, Math.min(canvas.width - 26, flowX)),
+            y: Math.max(0, Math.min(canvas.height - 56, flowY)),
+            scale: 1,
+            angle: 0,
+            styleId: styleSelect.value,
+            fontId: fontSelect.value,
+            panelAlpha: getDefaultPanelAlpha(styleSelect.value)
+          });
+        }
+      }
+      textLayers = next;
+      if (selected && selected.kind === 'text' && selected.index >= textLayers.length) selected = null;
+      multiSelected = multiSelected.filter(v => v.kind === 'text' && v.index < textLayers.length);
+    }
+
+    function itemKey(item) {
+      return `${item.kind}:${item.index}`;
+    }
+
+    function getLayoutByItem(item) {
+      if (!item) return null;
+      return item.kind === 'text' ? (textLayouts[item.index] || null) : (overlayLayouts[item.index] || null);
+    }
+
+    function getItemEdges(item) {
+      const layout = getLayoutByItem(item);
+      return layout ? layoutEdges(layout) : null;
+    }
+
+    function getActiveSelectionItems() {
+      if (multiSelected.length >= 2) return multiSelected.slice();
+      return selected ? [selected] : [];
+    }
+
+    function pickTopmostItem(items) {
+      let topmost = null;
+      let minTop = Number.POSITIVE_INFINITY;
+      for (const item of items) {
+        const e = getItemEdges(item);
+        if (!e) continue;
+        if (e.top < minTop) {
+          minTop = e.top;
+          topmost = item;
+        }
+      }
+      return topmost;
+    }
+
+    function drawMultiSelectionFrames() {
+      if (!multiSelected.length) return;
+      const selectedKey = selected ? itemKey(selected) : '';
+      for (const item of multiSelected) {
+        if (itemKey(item) === selectedKey) continue;
+        const layout = getLayoutByItem(item);
+        if (!layout) continue;
+        const gap = CONTROL_UI.selectionGap;
+        const fw = layout.w + gap * 2;
+        const fh = layout.h + gap * 2;
+        ctx.save();
+        ctx.translate(layout.cx, layout.cy);
+        ctx.rotate(layout.angle);
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = 'rgba(255,255,255,0.9)';
+        ctx.setLineDash([5, 3]);
+        ctx.strokeRect(-fw / 2, -fh / 2, fw, fh);
+        ctx.restore();
+      }
+    }
+
+    function alignSelectedHorizontal(mode) {
+      const items = getActiveSelectionItems();
+      if (items.length < 2) return;
+      const baseItem = pickTopmostItem(items);
+      if (!baseItem) return;
+      const baseEdges = getItemEdges(baseItem);
+      if (!baseEdges) return;
+
+      pushHistory();
+      for (const item of items) {
+        const edges = getItemEdges(item);
+        if (!edges) continue;
+        let targetX = edges.left;
+        if (mode === 'left') targetX = baseEdges.left;
+        if (mode === 'right') targetX = baseEdges.right - edges.w;
+        if (mode === 'center') targetX = baseEdges.cx - edges.w / 2;
+        targetX = Math.max(0, Math.min(canvas.width - edges.w, targetX));
+        if (item.kind === 'text' && textLayers[item.index]) textLayers[item.index].x = targetX;
+        if (item.kind === 'overlay' && overlayLayers[item.index]) overlayLayers[item.index].x = targetX;
+      }
+      render();
+      pushHistory();
+    }
+
+    function updateMultiToolbar() {
+      const show = multiSelected.length >= 2;
+      multiToolbar.classList.toggle('show', show);
+    }
+
+    function toggleInMultiSelection(item) {
+      const key = itemKey(item);
+      const idx = multiSelected.findIndex(v => itemKey(v) === key);
+      if (idx >= 0) multiSelected.splice(idx, 1);
+      else multiSelected.push(item);
+      selected = item;
+      syncControlsFromSelectedText();
+      updateMultiToolbar();
+    }
+
+    function clearLongPressTimer() {
+      if (longPressTimer) {
+        clearTimeout(longPressTimer);
+        longPressTimer = null;
+      }
+    }
+
+    function drawLiveBadge() {
+      if (!isLive) return;
+      const badgeW = 130;
+      const badgeH = 42;
+      const x = canvas.width - badgeW - 16;
+      const y = 14;
+      ctx.fillStyle = 'rgba(0,0,0,0.62)';
+      drawRoundedRectPath(x, y, badgeW, badgeH, 20);
+      ctx.fill();
+
+      ctx.fillStyle = '#98ff92';
+      ctx.beginPath();
+      ctx.arc(x + 20, y + badgeH / 2, 7, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '700 20px "Press Start 2P", monospace';
+      ctx.fillText('LIVE', x + 36, y + 29);
+    }
+
+    function drawOverlayLayers() {
+      overlayLayouts = [];
+      for (let i = 0; i < overlayLayers.length; i += 1) {
+        const l = overlayLayers[i];
+        l.w = Math.max(40, Math.min(canvas.width - 2, l.w));
+        l.h = Math.max(40, Math.min(canvas.height - 2, l.h));
+        l.x = Math.max(0, Math.min(canvas.width - l.w, l.x));
+        l.y = Math.max(0, Math.min(canvas.height - l.h, l.y));
+        if (typeof l.angle !== 'number') l.angle = 0;
+
+        const cx = l.x + l.w / 2;
+        const cy = l.y + l.h / 2;
+
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate(l.angle);
+        ctx.drawImage(l.img, -l.w / 2, -l.h / 2, l.w, l.h);
+        ctx.restore();
+
+        overlayLayouts.push({ cx, cy, w: l.w, h: l.h, angle: l.angle });
+      }
+    }
+
+    function drawTextLayers() {
+      textLayouts = [];
+      const maxInnerWidth = canvas.width - 30;
+
+      for (let i = 0; i < textLayers.length; i += 1) {
+        const layer = textLayers[i];
+        if (typeof layer.angle !== 'number') layer.angle = 0;
+        if (!layer.styleId || !STYLE_CONFIGS[layer.styleId]) layer.styleId = 'blackwhite';
+        if (!layer.fontId || !FONT_FAMILIES[layer.fontId]) layer.fontId = 'builtin-sourcehan-light';
+
+        const layerStyle = getStyleConfig(layer.styleId);
+        const fontStack = FONT_FAMILIES[layer.fontId] || FONT_FAMILIES['builtin-sourcehan-light'];
+        const panelAlpha = typeof layer.panelAlpha === 'number' ? Math.max(0, Math.min(1, layer.panelAlpha)) : getDefaultPanelAlpha(layer.styleId);
+
+        let fontSize = Math.max(24, Math.round(56 * layer.scale));
+        let font = '';
+        let emojiFont = '';
+        let lines = [];
+        let lineMetrics = [];
+        const padX = layerStyle.usePanel ? layerStyle.panel.padX : 0;
+        const padY = layerStyle.usePanel ? layerStyle.panel.padY : 0;
+
+        for (let step = 0; step < 12; step += 1) {
+          font = `${layerStyle.bodyWeight} ${fontSize}px ${fontStack}`;
+          emojiFont = `400 ${fontSize}px ${EMOJI_FONT_STACK}`;
+          lines = wrapByWidth(layer.text, font, emojiFont, maxInnerWidth, layerStyle.letterSpacing, 4);
+          lineMetrics = lines.map(v => measureLineMetrics(v, font, emojiFont, layerStyle.letterSpacing));
+          const lineW = Math.max(...lineMetrics.map(v => v.visualWidth), 0);
+          if (lineW + padX * 2 <= canvas.width - 20) break;
+          fontSize -= 2;
+          if (fontSize <= 22) break;
+        }
+
+        const lineHeight = fontSize * (layerStyle.lineHeight || 1.14);
+        const lineRects = [];
+        let minX = Number.POSITIVE_INFINITY;
+        let minY = Number.POSITIVE_INFINITY;
+        let maxX = Number.NEGATIVE_INFINITY;
+        let maxY = Number.NEGATIVE_INFINITY;
+        for (let li = 0; li < lines.length; li += 1) {
+          const m = lineMetrics[li];
+          const baselineY = li * lineHeight + m.ascent + padY;
+          const visualLeft = padX + m.minLeft;
+          const visualRight = padX + m.maxRight;
+          const textTop = baselineY - m.ascent;
+          const textBottom = baselineY + m.descent;
+          const boxLeft = layerStyle.usePanel ? (visualLeft - padX) : visualLeft;
+          const boxRight = layerStyle.usePanel ? (visualRight + padX) : visualRight;
+          const boxTop = layerStyle.usePanel ? (textTop - padY) : textTop;
+          const boxBottom = layerStyle.usePanel ? (textBottom + padY) : textBottom;
+          lineRects.push({
+            text: lines[li],
+            baselineY,
+            textStartX: padX,
+            bgX: boxLeft,
+            bgY: boxTop,
+            bgW: Math.max(2, boxRight - boxLeft),
+            bgH: Math.max(2, boxBottom - boxTop)
+          });
+          minX = Math.min(minX, boxLeft);
+          minY = Math.min(minY, boxTop);
+          maxX = Math.max(maxX, boxRight);
+          maxY = Math.max(maxY, boxBottom);
+        }
+        if (!Number.isFinite(minX)) minX = 0;
+        if (!Number.isFinite(minY)) minY = 0;
+        if (!Number.isFinite(maxX)) maxX = 26;
+        if (!Number.isFinite(maxY)) maxY = fontSize;
+        const shiftX = -minX;
+        const shiftY = -minY;
+        const boxW = Math.max(26, maxX - minX);
+        const boxH = Math.max(24, maxY - minY);
+
+        layer.x = Math.max(0, Math.min(canvas.width - boxW, layer.x));
+        layer.y = Math.max(0, Math.min(canvas.height - boxH, layer.y));
+
+        const cx = layer.x + boxW / 2;
+        const cy = layer.y + boxH / 2;
+
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate(layer.angle);
+
+        ctx.fillStyle = layerStyle.textColor;
+        ctx.shadowBlur = layerStyle.textShadowBlur || 0;
+        for (let li = 0; li < lineRects.length; li += 1) {
+          const ln = lineRects[li];
+          const drawLeft = -boxW / 2 + shiftX;
+          const drawTop = -boxH / 2 + shiftY;
+          if (layerStyle.usePanel && panelAlpha > 0) {
+            ctx.fillStyle = `rgba(${layerStyle.panel.rgb},${panelAlpha})`;
+            ctx.fillRect(drawLeft + ln.bgX, drawTop + ln.bgY, ln.bgW, ln.bgH);
+          }
+          ctx.fillStyle = layerStyle.textColor;
+          drawTextWithSpacing(ln.text, drawLeft + ln.textStartX, drawTop + ln.baselineY, font, layerStyle.letterSpacing, emojiFont);
+        }
+
+        ctx.restore();
+
+        textLayouts.push({ cx, cy, w: boxW, h: boxH, angle: layer.angle });
+      }
+    }
+
+    function drawSelection() {
+      if (!selected) return;
+      let layout = null;
+      if (selected.kind === 'text') layout = textLayouts[selected.index] || null;
+      if (selected.kind === 'overlay') layout = overlayLayouts[selected.index] || null;
+      if (!layout) return;
+
+      const gap = CONTROL_UI.selectionGap;
+      const fw = layout.w + gap * 2;
+      const fh = layout.h + gap * 2;
+
+      ctx.save();
+      ctx.translate(layout.cx, layout.cy);
+      ctx.rotate(layout.angle);
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = '#ffffff';
+      ctx.strokeRect(-fw / 2, -fh / 2, fw, fh);
+      ctx.restore();
+
+      const controls = getSelectionControlPoints(layout);
+
+      // 左上角删除按钮
+      ctx.save();
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.arc(controls.delete.x, controls.delete.y, CONTROL_UI.deleteHandleRadius, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#000000';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(controls.delete.x - 5, controls.delete.y - 5);
+      ctx.lineTo(controls.delete.x + 5, controls.delete.y + 5);
+      ctx.moveTo(controls.delete.x + 5, controls.delete.y - 5);
+      ctx.lineTo(controls.delete.x - 5, controls.delete.y + 5);
+      ctx.stroke();
+      ctx.restore();
+
+      // 右上角缩放按钮（更小且贴右上角）
+      const s = CONTROL_UI.resizeHandleSize;
+      ctx.save();
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(controls.resize.x - s / 2, controls.resize.y - s / 2, s, s);
+      ctx.restore();
+
+      // 右下角旋转按钮
+      ctx.save();
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.arc(controls.rotate.x, controls.rotate.y, CONTROL_UI.rotateHandleRadius, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#000000';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(controls.rotate.x, controls.rotate.y, 6.8, 0.45, 5.45);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(controls.rotate.x + 4.8, controls.rotate.y - 4.9);
+      ctx.lineTo(controls.rotate.x + 9.8, controls.rotate.y - 4.1);
+      ctx.lineTo(controls.rotate.x + 7.1, controls.rotate.y - 0.4);
+      ctx.closePath();
+      ctx.fillStyle = '#000000';
+      ctx.fill();
+      ctx.restore();
+    }
+
+    function drawGuides() {
+      if (!activeGuides.length) return;
+      ctx.save();
+      ctx.lineWidth = 1.6;
+      ctx.strokeStyle = 'rgba(255,255,255,0.95)';
+      ctx.setLineDash([7, 5]);
+      for (const g of activeGuides) {
+        ctx.beginPath();
+        ctx.moveTo(g.x1, g.y1);
+        ctx.lineTo(g.x2, g.y2);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    function render() {
+      if (!baseImage) {
+        drawPlaceholder();
+        return;
+      }
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      drawImageCover(baseImage);
+      applyOverlay();
+      drawLiveBadge();
+
+      ctx.textAlign = 'left';
+      ctx.shadowColor = 'rgba(0,0,0,0.00)';
+      ctx.shadowBlur = 0;
+
+      drawOverlayLayers();
+      drawTextLayers();
+      drawGuides();
+      drawMultiSelectionFrames();
+      drawSelection();
+
+      ctx.shadowBlur = 0;
+    }
+
+    async function loadImageFromSrc(src) {
+      return new Promise((resolve, reject) => {
+        if (!src) {
+          resolve(null);
+          return;
+        }
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = () => reject(new Error('图片加载失败'));
+        img.src = src;
+      });
+    }
+
+    async function fileToImageSrc(file) {
+      const name = (file.name || '').toLowerCase();
+      const type = (file.type || '').toLowerCase();
+      const isHeic = type.includes('heic') || type.includes('heif') || name.endsWith('.heic') || name.endsWith('.heif');
+      if (!isHeic) {
+        if (typeof createImageBitmap === 'function') {
+          try {
+            const bmp = await createImageBitmap(file, { imageOrientation: 'from-image' });
+            const temp = document.createElement('canvas');
+            temp.width = bmp.width;
+            temp.height = bmp.height;
+            const tctx = temp.getContext('2d');
+            tctx.drawImage(bmp, 0, 0);
+            const normalized = await new Promise((resolve, reject) => {
+              temp.toBlob((blob) => {
+                if (blob) resolve(blob);
+                else reject(new Error('图片格式转换失败'));
+              }, 'image/jpeg', 0.98);
+            });
+            return URL.createObjectURL(normalized);
+          } catch (_) {}
+        }
+        return URL.createObjectURL(file);
+      }
+
+      if (typeof window.heic2any !== 'function') {
+        throw new Error('当前浏览器未加载 HEIC 转换器，请联网后重试。');
+      }
+      const output = await window.heic2any({ blob: file, toType: 'image/jpeg', quality: 0.95 });
+      const outputBlob = Array.isArray(output) ? output[0] : output;
+      return URL.createObjectURL(outputBlob);
+    }
+
+    function cloneTextLayers() {
+      return textLayers.map(t => ({
+        text: t.text,
+        x: t.x,
+        y: t.y,
+        scale: t.scale,
+        angle: t.angle || 0,
+        styleId: t.styleId || 'blackwhite',
+        fontId: t.fontId || 'builtin-sourcehan-light',
+        panelAlpha: typeof t.panelAlpha === 'number' ? t.panelAlpha : getDefaultPanelAlpha(t.styleId || 'blackwhite')
+      }));
+    }
+
+    function cloneOverlayLayers() {
+      return overlayLayers.map(o => ({ src: o.src, x: o.x, y: o.y, w: o.w, h: o.h, angle: o.angle || 0 }));
+    }
+
+    function openFontDB() {
+      return new Promise((resolve, reject) => {
+        if (!('indexedDB' in window)) {
+          reject(new Error('当前浏览器不支持 IndexedDB'));
+          return;
+        }
+        const req = indexedDB.open(FONT_DB_NAME, 1);
+        req.onupgradeneeded = () => {
+          const db = req.result;
+          if (!db.objectStoreNames.contains(FONT_DB_STORE)) {
+            db.createObjectStore(FONT_DB_STORE, { keyPath: 'id' });
+          }
+        };
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error || new Error('字体数据库打开失败'));
+      });
+    }
+
+    async function putFontIntoDB(entry, blob) {
+      const db = await openFontDB();
+      await new Promise((resolve, reject) => {
+        const tx = db.transaction(FONT_DB_STORE, 'readwrite');
+        const store = tx.objectStore(FONT_DB_STORE);
+        store.put({ id: entry.id, name: entry.name, blob });
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => reject(tx.error || new Error('字体写入失败'));
+      });
+      db.close();
+    }
+
+    async function listFontsFromDB() {
+      const db = await openFontDB();
+      const rows = await new Promise((resolve, reject) => {
+        const tx = db.transaction(FONT_DB_STORE, 'readonly');
+        const store = tx.objectStore(FONT_DB_STORE);
+        const req = store.getAll();
+        req.onsuccess = () => resolve(Array.isArray(req.result) ? req.result : []);
+        req.onerror = () => reject(req.error || new Error('字体读取失败'));
+      });
+      db.close();
+      return rows;
+    }
+
+    function rememberSelectedFont(fontId) {
+      try {
+        localStorage.setItem(STORAGE_SELECTED_FONT, fontId);
+      } catch (_) {}
+    }
+
+    function ensureFontOption(id, label) {
+      let opt = fontSelect.querySelector(`option[value="${id}"]`);
+      if (!opt) {
+        opt = document.createElement('option');
+        opt.value = id;
+        const uploadOpt = fontSelect.querySelector('option[value="upload-font"]');
+        fontSelect.insertBefore(opt, uploadOpt);
+      }
+      opt.textContent = label;
+      opt.disabled = false;
+    }
+
+    async function registerImportedFont(fontEntry) {
+      const family = `Imported_${fontEntry.id}`;
+      const source = fontEntry.dataUrl ? `url(${fontEntry.dataUrl})` : `url(${fontEntry.objectUrl})`;
+      const face = new FontFace(family, source);
+      await face.load();
+      document.fonts.add(face);
+      FONT_FAMILIES[fontEntry.id] = `"${family}", "Noto Sans SC", "PingFang SC", ${EMOJI_FONT_STACK}`;
+      ensureFontOption(fontEntry.id, fontEntry.name);
+    }
+
+    async function restoreImportedFonts() {
+      // Prefer IndexedDB persistence for large font files.
+      try {
+        const dbRows = await listFontsFromDB();
+        for (const row of dbRows) {
+          if (!row || typeof row.id !== 'string' || typeof row.name !== 'string' || !row.blob) continue;
+          const objectUrl = URL.createObjectURL(row.blob);
+          try {
+            await registerImportedFont({ id: row.id, name: row.name, objectUrl });
+            importedFonts.push({ id: row.id, name: row.name });
+          } finally {
+            URL.revokeObjectURL(objectUrl);
+          }
+        }
+        return;
+      } catch (_) {}
+
+      // Fallback to legacy localStorage data if present.
+      let raw = null;
+      try {
+        raw = localStorage.getItem(STORAGE_IMPORTED_FONTS);
+      } catch (_) {}
+      if (!raw) return;
+      let parsed = [];
+      try {
+        parsed = JSON.parse(raw);
+      } catch (_) {}
+      if (!Array.isArray(parsed)) return;
+      for (const item of parsed) {
+        if (!item || typeof item.id !== 'string' || typeof item.name !== 'string' || typeof item.dataUrl !== 'string') continue;
+        try {
+          await registerImportedFont(item);
+          importedFonts.push({ id: item.id, name: item.name });
+        } catch (_) {}
+      }
+    }
+
+    function restoreSelectedFontId() {
+      let saved = null;
+      try {
+        saved = localStorage.getItem(STORAGE_SELECTED_FONT);
+      } catch (_) {}
+      if (saved && FONT_FAMILIES[saved]) {
+        fontSelect.value = saved;
+        previousFontValue = saved;
+      } else {
+        fontSelect.value = 'builtin-sourcehan-light';
+        previousFontValue = 'builtin-sourcehan-light';
+      }
+    }
+
+    function getStateSnapshot() {
+      return {
+        body: bodyInput.value,
+        style: styleSelect.value,
+        font: fontSelect.value,
+        isLive,
+        baseImageSrc,
+        selected,
+        multiSelected: multiSelected.slice(),
+        textLayers: cloneTextLayers(),
+        overlayLayers: cloneOverlayLayers()
+      };
+    }
+
+    function stateSignature(state) {
+      return JSON.stringify(state);
+    }
+
+    function pushHistory() {
+      if (isApplyingHistory) return;
+      const state = getStateSnapshot();
+      const last = historyStack[historyStack.length - 1];
+      if (!last || stateSignature(last) !== stateSignature(state)) {
+        historyStack.push(state);
+        redoStack.length = 0;
+      }
+      if (historyStack.length > 80) historyStack.shift();
+    }
+
+    async function applyState(state) {
+      isApplyingHistory = true;
+
+      bodyInput.value = state.body;
+      styleSelect.value = state.style && STYLE_CONFIGS[state.style] ? state.style : 'blackwhite';
+      let remembered = 'builtin-sourcehan-light';
+      try {
+        remembered = localStorage.getItem(STORAGE_SELECTED_FONT) || 'builtin-sourcehan-light';
+      } catch (_) {}
+      fontSelect.value = state.font && FONT_FAMILIES[state.font] ? state.font : remembered;
+      previousFontValue = fontSelect.value;
+      isLive = !!state.isLive;
+      setLiveChip();
+
+      baseImageSrc = state.baseImageSrc || '';
+      try {
+        baseImage = await loadImageFromSrc(baseImageSrc);
+        setCanvasSizeFromImage(baseImage);
+      } catch (_) {
+        baseImage = null;
+      }
+
+      textLayers = Array.isArray(state.textLayers) ? state.textLayers.map(t => ({ ...t })) : [];
+      const overlays = Array.isArray(state.overlayLayers) ? state.overlayLayers : [];
+      const loaded = [];
+      for (const o of overlays) {
+        try {
+          const img = await loadImageFromSrc(o.src);
+          if (img) loaded.push({ ...o, img });
+        } catch (_) {}
+      }
+      overlayLayers = loaded;
+
+      selected = state.selected || null;
+      multiSelected = Array.isArray(state.multiSelected) ? state.multiSelected.slice() : [];
+      activeGuides = [];
+      render();
+      syncControlsFromSelectedText();
+      updateMultiToolbar();
+      isApplyingHistory = false;
+    }
+
+    async function undoLastStep() {
+      if (historyStack.length <= 1) return;
+      const current = historyStack.pop();
+      redoStack.push(current);
+      const prev = historyStack[historyStack.length - 1];
+      await applyState(prev);
+    }
+
+    async function redoNextStep() {
+      if (!redoStack.length) return;
+      const next = redoStack.pop();
+      historyStack.push(next);
+      await applyState(next);
+    }
+
+    function snapAngleToFlat(rawAngle) {
+      const snapStep = Math.PI;
+      const target = Math.round(rawAngle / snapStep) * snapStep;
+      return Math.abs(rawAngle - target) <= 0.07 ? target : rawAngle;
+    }
+
+    function pointerToCanvasPoint(e) {
+      const rect = canvas.getBoundingClientRect();
+      return {
+        x: (e.clientX - rect.left) * (canvas.width / rect.width),
+        y: (e.clientY - rect.top) * (canvas.height / rect.height)
+      };
+    }
+
+    function refreshTextLayersFromTextarea() {
+      const previous = cloneTextLayers();
+      syncTextLayers(parseLines());
+      for (let i = 0; i < Math.min(previous.length, textLayers.length); i += 1) {
+        textLayers[i].x = previous[i].x;
+        textLayers[i].y = previous[i].y;
+        textLayers[i].scale = previous[i].scale;
+        textLayers[i].angle = previous[i].angle || 0;
+        textLayers[i].styleId = previous[i].styleId || styleSelect.value;
+        textLayers[i].fontId = previous[i].fontId || fontSelect.value;
+        textLayers[i].panelAlpha = typeof previous[i].panelAlpha === 'number' ? previous[i].panelAlpha : getDefaultPanelAlpha(textLayers[i].styleId);
+      }
+      updateMultiToolbar();
+    }
+
+    function getLayoutBySelected(sel) {
+      if (!sel) return null;
+      if (sel.kind === 'text') return textLayouts[sel.index] || null;
+      if (sel.kind === 'overlay') return overlayLayouts[sel.index] || null;
+      return null;
+    }
+
+    function syncControlsFromSelectedText() {
+      if (!selected || selected.kind !== 'text' || !textLayers[selected.index]) {
+        alphaRange.disabled = true;
+        alphaRange.value = '100';
+        alphaValue.textContent = '100%';
+        return;
+      }
+      alphaRange.disabled = false;
+      const layer = textLayers[selected.index];
+      if (layer.styleId && STYLE_CONFIGS[layer.styleId]) styleSelect.value = layer.styleId;
+      if (layer.fontId && FONT_FAMILIES[layer.fontId]) {
+        fontSelect.value = layer.fontId;
+        previousFontValue = layer.fontId;
+      }
+      const alpha = typeof layer.panelAlpha === 'number' ? layer.panelAlpha : getDefaultPanelAlpha(layer.styleId);
+      alphaRange.value = String(Math.round(alpha * 100));
+      alphaValue.textContent = `${Math.round(alpha * 100)}%`;
+    }
+
+    function removeSelectedLayer() {
+      if (!selected) return;
+      pushHistory();
+      if (selected.kind === 'text' && textLayers[selected.index]) {
+        textLayers.splice(selected.index, 1);
+        bodyInput.value = textLayers.map(v => v.text).join('\n');
+      } else if (selected.kind === 'overlay' && overlayLayers[selected.index]) {
+        overlayLayers.splice(selected.index, 1);
+      }
+      selected = null;
+      multiSelected = [];
+      render();
+      syncControlsFromSelectedText();
+      updateMultiToolbar();
+      pushHistory();
+    }
+
+    function layoutEdges(layout) {
+      return {
+        left: layout.cx - layout.w / 2,
+        right: layout.cx + layout.w / 2,
+        top: layout.cy - layout.h / 2,
+        bottom: layout.cy + layout.h / 2,
+        cx: layout.cx,
+        cy: layout.cy,
+        w: layout.w,
+        h: layout.h
+      };
+    }
+
+    function getAllLayoutsExcept(excludeKind, excludeIndex) {
+      const out = [];
+      for (let i = 0; i < textLayouts.length; i += 1) {
+        if (excludeKind === 'text' && i === excludeIndex) continue;
+        out.push(layoutEdges(textLayouts[i]));
+      }
+      for (let i = 0; i < overlayLayouts.length; i += 1) {
+        if (excludeKind === 'overlay' && i === excludeIndex) continue;
+        out.push(layoutEdges(overlayLayouts[i]));
+      }
+      return out;
+    }
+
+    function getEqualSpacingSnapForText(index, nextX, nextY, w, h) {
+      const moving = {
+        left: nextX,
+        right: nextX + w,
+        top: nextY,
+        bottom: nextY + h,
+        cx: nextX + w / 2
+      };
+      const others = [];
+      for (let i = 0; i < textLayouts.length; i += 1) {
+        if (i === index) continue;
+        others.push(layoutEdges(textLayouts[i]));
+      }
+      if (others.length < 2) return null;
+
+      const overlapEnough = (o) => {
+        const overlap = Math.min(moving.right, o.right) - Math.max(moving.left, o.left);
+        return overlap >= Math.min(w, o.w) * 0.25;
+      };
+
+      let topNeighbor = null;
+      let bottomNeighbor = null;
+      for (const o of others) {
+        if (!overlapEnough(o)) continue;
+        if (o.bottom <= moving.top) {
+          if (!topNeighbor || o.bottom > topNeighbor.bottom) topNeighbor = o;
+        }
+        if (o.top >= moving.bottom) {
+          if (!bottomNeighbor || o.top < bottomNeighbor.top) bottomNeighbor = o;
+        }
+      }
+      if (!topNeighbor || !bottomNeighbor) return null;
+
+      // 公式：gapTop = top - topNeighbor.bottom, gapBottom = bottomNeighbor.top - (top + h)
+      // 令 gapTop == gapBottom，可得 targetTop = (bottomNeighbor.top + topNeighbor.bottom - h) / 2
+      const targetTop = (bottomNeighbor.top + topNeighbor.bottom - h) / 2;
+      const gapThreshold = 8;
+      const near = Math.abs(nextY - targetTop) <= gapThreshold;
+      if (!near) return null;
+
+      const snappedTop = Math.max(0, Math.min(canvas.height - h, targetTop));
+      const cx = moving.cx;
+      const guides = [
+        { x1: cx, y1: topNeighbor.bottom, x2: cx, y2: snappedTop },
+        { x1: cx, y1: snappedTop + h, x2: cx, y2: bottomNeighbor.top }
+      ];
+      return { y: snappedTop, guides };
+    }
+
+    function snapMoveWithGuides(kind, index, nextX, nextY, w, h) {
+      const threshold = 8;
+      const moving = {
+        left: nextX,
+        right: nextX + w,
+        top: nextY,
+        bottom: nextY + h,
+        cx: nextX + w / 2,
+        cy: nextY + h / 2,
+        w,
+        h
+      };
+      const others = getAllLayoutsExcept(kind, index);
+      const xCandidates = [{ key: 'center-x', value: canvas.width / 2 }];
+      const yCandidates = [{ key: 'center-y', value: canvas.height / 2 }];
+
+      for (const o of others) {
+        xCandidates.push({ key: 'left', value: o.left });
+        xCandidates.push({ key: 'right', value: o.right });
+        xCandidates.push({ key: 'cx', value: o.cx });
+        yCandidates.push({ key: 'top', value: o.top });
+        yCandidates.push({ key: 'bottom', value: o.bottom });
+        yCandidates.push({ key: 'cy', value: o.cy });
+      }
+
+      const mapX = {
+        left: () => moving.left,
+        right: () => moving.right,
+        cx: () => moving.cx
+      };
+      const mapY = {
+        top: () => moving.top,
+        bottom: () => moving.bottom,
+        cy: () => moving.cy
+      };
+
+      let bestX = null;
+      for (const anchor of ['left', 'right', 'cx']) {
+        const anchorV = mapX[anchor]();
+        for (const t of xCandidates) {
+          const d = t.value - anchorV;
+          const ad = Math.abs(d);
+          if (ad <= threshold && (!bestX || ad < bestX.delta)) bestX = { delta: ad, move: d, guideX: t.value };
+        }
+      }
+
+      if (bestX) {
+        nextX += bestX.move;
+        moving.left += bestX.move;
+        moving.right += bestX.move;
+        moving.cx += bestX.move;
+      }
+
+      let bestY = null;
+      for (const anchor of ['top', 'bottom', 'cy']) {
+        const anchorV = mapY[anchor]();
+        for (const t of yCandidates) {
+          const d = t.value - anchorV;
+          const ad = Math.abs(d);
+          if (ad <= threshold && (!bestY || ad < bestY.delta)) bestY = { delta: ad, move: d, guideY: t.value };
+        }
+      }
+
+      if (bestY) {
+        nextY += bestY.move;
+        moving.top += bestY.move;
+        moving.bottom += bestY.move;
+        moving.cy += bestY.move;
+      }
+
+      const guides = [];
+      if (bestX) guides.push({ x1: bestX.guideX, y1: 0, x2: bestX.guideX, y2: canvas.height });
+      if (bestY) guides.push({ x1: 0, y1: bestY.guideY, x2: canvas.width, y2: bestY.guideY });
+
+      if (kind === 'text') {
+        const spacing = getEqualSpacingSnapForText(index, nextX, nextY, w, h);
+        if (spacing) {
+          nextY = spacing.y;
+          guides.push(...spacing.guides);
+        }
+      }
+      activeGuides = guides;
+
+      return { x: nextX, y: nextY };
+    }
+
+    imageInput.addEventListener('change', async (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      pushHistory();
+      try {
+        const src = await fileToImageSrc(file);
+        const img = await loadImageFromSrc(src);
+        baseImage = img;
+        setCanvasSizeFromImage(img);
+        baseImageSrc = src;
+        selected = null;
+        multiSelected = [];
+        textLayers = [];
+        overlayLayers = [];
+        bodyInput.value = '';
+        render();
+        syncControlsFromSelectedText();
+        updateMultiToolbar();
+        pushHistory();
+      } catch (err) {
+        alert(`主图读取失败：${err.message}`);
+      }
+    });
+
+    liveToggle.addEventListener('click', () => {
+      isLive = !isLive;
+      setLiveChip();
+      render();
+      pushHistory();
+    });
+
+    bodyInput.addEventListener('input', () => {
+      refreshTextLayersFromTextarea();
+      render();
+    });
+
+    bodyInput.addEventListener('change', () => {
+      refreshTextLayersFromTextarea();
+      render();
+      pushHistory();
+    });
+
+    styleSelect.addEventListener('change', () => {
+      if (selected && selected.kind === 'text' && textLayers[selected.index]) {
+        textLayers[selected.index].styleId = styleSelect.value;
+        if (typeof textLayers[selected.index].panelAlpha !== 'number') {
+          textLayers[selected.index].panelAlpha = getDefaultPanelAlpha(styleSelect.value);
+        }
+        alphaRange.value = String(Math.round((textLayers[selected.index].panelAlpha || 0) * 100));
+        alphaValue.textContent = `${alphaRange.value}%`;
+      }
+      render();
+      pushHistory();
+    });
+
+    function applyFontSelection() {
+      if (fontSelect.value === 'upload-font') {
+        fontSelect.value = previousFontValue;
+        fontFileInput.click();
+        return;
+      }
+      previousFontValue = fontSelect.value;
+      rememberSelectedFont(previousFontValue);
+      if (selected && selected.kind === 'text' && textLayers[selected.index]) {
+        textLayers[selected.index].fontId = previousFontValue;
+      }
+      render();
+      pushHistory();
+    }
+    fontSelect.addEventListener('change', applyFontSelection);
+    fontSelect.addEventListener('input', applyFontSelection);
+
+    alphaRange.addEventListener('input', () => {
+      alphaValue.textContent = `${alphaRange.value}%`;
+      if (selected && selected.kind === 'text' && textLayers[selected.index]) {
+        textLayers[selected.index].panelAlpha = Number(alphaRange.value) / 100;
+        render();
+      }
+    });
+
+    alphaRange.addEventListener('change', () => {
+      alphaValue.textContent = `${alphaRange.value}%`;
+      if (selected && selected.kind === 'text' && textLayers[selected.index]) {
+        textLayers[selected.index].panelAlpha = Number(alphaRange.value) / 100;
+        render();
+        pushHistory();
+      }
+    });
+
+    fontFileInput.addEventListener('change', async (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      pushHistory();
+      try {
+        const entry = {
+          id: `custom-${Date.now()}`,
+          name: file.name
+        };
+        const objectUrl = URL.createObjectURL(file);
+        try {
+          await registerImportedFont({ ...entry, objectUrl });
+        } finally {
+          URL.revokeObjectURL(objectUrl);
+        }
+        importedFonts.push({ id: entry.id, name: entry.name });
+        try {
+          await putFontIntoDB(entry, file);
+        } catch (_) {
+          // fallback for older data; may hit quota, so keep best-effort only
+          const dataUrl = await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = () => reject(new Error('字体读取失败'));
+            reader.readAsDataURL(file);
+          });
+          let old = [];
+          try {
+            old = JSON.parse(localStorage.getItem(STORAGE_IMPORTED_FONTS) || '[]');
+          } catch (_) { old = []; }
+          old.push({ id: entry.id, name: entry.name, dataUrl });
+          try { localStorage.setItem(STORAGE_IMPORTED_FONTS, JSON.stringify(old)); } catch (_) {}
+        }
+
+        fontSelect.value = entry.id;
+        previousFontValue = entry.id;
+        rememberSelectedFont(entry.id);
+        if (selected && selected.kind === 'text' && textLayers[selected.index]) {
+          textLayers[selected.index].fontId = entry.id;
+        }
+        render();
+        pushHistory();
+      } catch (err) {
+        alert(`字体导入失败：${err.message}`);
+      }
+      fontFileInput.value = '';
+    });
+
+    addOverlayBtn.addEventListener('click', () => overlayInput.click());
+
+    overlayInput.addEventListener('change', async (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      pushHistory();
+      try {
+        const src = await fileToImageSrc(file);
+        const img = await loadImageFromSrc(src);
+        const targetW = Math.min(canvas.width * 0.36, img.width);
+        const ratio = img.width / img.height;
+        const targetH = targetW / ratio;
+        overlayLayers.push({
+          src,
+          img,
+          x: Math.max(10, (canvas.width - targetW) / 2),
+          y: Math.max(10, (canvas.height - targetH) / 2),
+          w: targetW,
+          h: targetH,
+          angle: 0
+        });
+        selected = { kind: 'overlay', index: overlayLayers.length - 1 };
+        multiSelected = [];
+        render();
+        syncControlsFromSelectedText();
+        updateMultiToolbar();
+        pushHistory();
+      } catch (err) {
+        alert(`叠加图读取失败：${err.message}`);
+      }
+      overlayInput.value = '';
+    });
+
+    undoBtn.addEventListener('click', undoLastStep);
+    redoBtn.addEventListener('click', redoNextStep);
+    alignLeftBtn.addEventListener('click', () => alignSelectedHorizontal('left'));
+    alignCenterBtn.addEventListener('click', () => alignSelectedHorizontal('center'));
+    alignRightBtn.addEventListener('click', () => alignSelectedHorizontal('right'));
+
+    downloadBtn.addEventListener('click', () => {
+      render();
+      const a = document.createElement('a');
+      a.href = canvas.toDataURL('image/jpeg', 0.95);
+      a.download = `plog-${Date.now()}.jpg`;
+      a.click();
+    });
+
+    canvas.addEventListener('pointerdown', (e) => {
+      if (!baseImage) return;
+      const p = pointerToCanvasPoint(e);
+      clearLongPressTimer();
+      longPressTriggered = false;
+
+      const currentLayout = getLayoutBySelected(selected);
+      if (currentLayout) {
+        const controls = getSelectionControlPoints(currentLayout);
+        const dDel = Math.hypot(p.x - controls.delete.x, p.y - controls.delete.y);
+        if (dDel <= CONTROL_UI.deleteHandleRadius + 3) {
+          removeSelectedLayer();
+          e.preventDefault();
+          return;
+        }
+
+        const s = CONTROL_UI.resizeHandleSize;
+        if (Math.abs(p.x - controls.resize.x) <= s / 2 + 2 && Math.abs(p.y - controls.resize.y) <= s / 2 + 2) {
+          if (selected.kind === 'text') {
+            interaction = {
+              type: 'resize-text',
+              index: selected.index,
+              startX: p.x,
+              startY: p.y,
+              baseScale: textLayers[selected.index].scale
+            };
+          } else {
+            const o = overlayLayers[selected.index];
+            interaction = {
+              type: 'resize-overlay',
+              index: selected.index,
+              startX: p.x,
+              startY: p.y,
+              baseW: o.w,
+              baseH: o.h,
+              ratio: o.w / o.h
+            };
+          }
+          canvas.setPointerCapture(e.pointerId);
+          e.preventDefault();
+          return;
+        }
+
+        const dRot = Math.hypot(p.x - controls.rotate.x, p.y - controls.rotate.y);
+        if (dRot <= CONTROL_UI.rotateHandleRadius + 3) {
+          if (selected.kind === 'text') {
+            const l = textLayouts[selected.index];
+            interaction = {
+              type: 'rotate-scale-text',
+              index: selected.index,
+              baseAngle: textLayers[selected.index].angle || 0,
+              baseScale: textLayers[selected.index].scale || 1,
+              startPointerAngle: Math.atan2(p.y - l.cy, p.x - l.cx),
+              startDistance: Math.max(8, Math.hypot(p.x - l.cx, p.y - l.cy))
+            };
+          } else {
+            const l = overlayLayouts[selected.index];
+            interaction = {
+              type: 'rotate-scale-overlay',
+              index: selected.index,
+              baseAngle: overlayLayers[selected.index].angle || 0,
+              baseW: overlayLayers[selected.index].w,
+              baseH: overlayLayers[selected.index].h,
+              startPointerAngle: Math.atan2(p.y - l.cy, p.x - l.cx),
+              startDistance: Math.max(8, Math.hypot(p.x - l.cx, p.y - l.cy))
+            };
+          }
+          canvas.setPointerCapture(e.pointerId);
+          e.preventDefault();
+          return;
+        }
+      }
+
+      let hit = null;
+      for (let i = textLayouts.length - 1; i >= 0; i -= 1) {
+        if (pointInRotatedLayout(p, textLayouts[i])) {
+          hit = { kind: 'text', index: i };
+          break;
+        }
+      }
+
+      if (!hit) {
+        for (let i = overlayLayouts.length - 1; i >= 0; i -= 1) {
+          if (pointInRotatedLayout(p, overlayLayouts[i])) {
+            hit = { kind: 'overlay', index: i };
+            break;
+          }
+        }
+      }
+
+      selected = hit;
+      if (!hit) {
+        interaction = null;
+        multiSelected = [];
+        activeGuides = [];
+        updateMultiToolbar();
+        render();
+        syncControlsFromSelectedText();
+        return;
+      }
+      interaction = { type: 'press-item', item: hit, startX: p.x, startY: p.y, pointerId: e.pointerId };
+      if (!multiSelected.length) updateMultiToolbar();
+      syncControlsFromSelectedText();
+      longPressTimer = setTimeout(() => {
+        longPressTriggered = true;
+        toggleInMultiSelection(hit);
+        interaction = { type: 'multi-hold' };
+        render();
+      }, LONG_PRESS_MS);
+
+      canvas.setPointerCapture(e.pointerId);
+      render();
+      e.preventDefault();
+    });
+
+    canvas.addEventListener('pointermove', (e) => {
+      if (!interaction) return;
+      const p = pointerToCanvasPoint(e);
+
+      if (interaction.type === 'press-item') {
+        const dx = p.x - interaction.startX;
+        const dy = p.y - interaction.startY;
+        if (Math.hypot(dx, dy) > TAP_MOVE_TOLERANCE) {
+          clearLongPressTimer();
+          if (longPressTriggered) {
+            interaction = { type: 'multi-hold' };
+            return;
+          }
+          const hit = interaction.item;
+          if (hit.kind === 'text') {
+            interaction = {
+              type: 'drag-text',
+              index: hit.index,
+              startX: interaction.startX,
+              startY: interaction.startY,
+              baseX: textLayers[hit.index].x,
+              baseY: textLayers[hit.index].y
+            };
+          } else {
+            interaction = {
+              type: 'drag-overlay',
+              index: hit.index,
+              startX: interaction.startX,
+              startY: interaction.startY,
+              baseX: overlayLayers[hit.index].x,
+              baseY: overlayLayers[hit.index].y
+            };
+          }
+        } else {
+          return;
+        }
+      }
+
+      if (interaction.type === 'multi-hold') {
+        return;
+      }
+
+      if (interaction.type === 'drag-text') {
+        const idx = interaction.index;
+        const box = textLayouts[idx];
+        if (!box || !textLayers[idx]) return;
+        const dx = p.x - interaction.startX;
+        const dy = p.y - interaction.startY;
+        let nextX = Math.max(0, Math.min(canvas.width - box.w, interaction.baseX + dx));
+        let nextY = Math.max(0, Math.min(canvas.height - box.h, interaction.baseY + dy));
+        const snapped = snapMoveWithGuides('text', idx, nextX, nextY, box.w, box.h);
+        textLayers[idx].x = Math.max(0, Math.min(canvas.width - box.w, snapped.x));
+        textLayers[idx].y = Math.max(0, Math.min(canvas.height - box.h, snapped.y));
+      } else if (interaction.type === 'drag-overlay') {
+        const idx = interaction.index;
+        const box = overlayLayouts[idx];
+        if (!box || !overlayLayers[idx]) return;
+        const dx = p.x - interaction.startX;
+        const dy = p.y - interaction.startY;
+        let nextX = Math.max(0, Math.min(canvas.width - box.w, interaction.baseX + dx));
+        let nextY = Math.max(0, Math.min(canvas.height - box.h, interaction.baseY + dy));
+        const snapped = snapMoveWithGuides('overlay', idx, nextX, nextY, box.w, box.h);
+        overlayLayers[idx].x = Math.max(0, Math.min(canvas.width - box.w, snapped.x));
+        overlayLayers[idx].y = Math.max(0, Math.min(canvas.height - box.h, snapped.y));
+      } else if (interaction.type === 'resize-text') {
+        activeGuides = [];
+        const idx = interaction.index;
+        if (!textLayers[idx]) return;
+        const dx = p.x - interaction.startX;
+        const dy = interaction.startY - p.y;
+        const scale = interaction.baseScale + (dx + dy) * 0.0023;
+        textLayers[idx].scale = Math.max(0.55, Math.min(2.5, scale));
+      } else if (interaction.type === 'resize-overlay') {
+        activeGuides = [];
+        const idx = interaction.index;
+        if (!overlayLayers[idx]) return;
+        const dx = p.x - interaction.startX;
+        const dy = interaction.startY - p.y;
+        const s = 1 + (dx + dy) * 0.003;
+        const nw = Math.max(40, interaction.baseW * s);
+        const nh = Math.max(40, nw / interaction.ratio);
+        overlayLayers[idx].w = Math.min(canvas.width, nw);
+        overlayLayers[idx].h = Math.min(canvas.height, nh);
+      } else if (interaction.type === 'rotate-scale-text') {
+        activeGuides = [];
+        const idx = interaction.index;
+        const layout = textLayouts[idx];
+        if (!layout || !textLayers[idx]) return;
+        const currentPointerAngle = Math.atan2(p.y - layout.cy, p.x - layout.cx);
+        const currentDistance = Math.max(8, Math.hypot(p.x - layout.cx, p.y - layout.cy));
+        const raw = interaction.baseAngle + (currentPointerAngle - interaction.startPointerAngle);
+        textLayers[idx].angle = snapAngleToFlat(raw);
+        textLayers[idx].scale = Math.max(0.55, Math.min(2.5, interaction.baseScale * (currentDistance / interaction.startDistance)));
+      } else if (interaction.type === 'rotate-scale-overlay') {
+        activeGuides = [];
+        const idx = interaction.index;
+        const layout = overlayLayouts[idx];
+        if (!layout || !overlayLayers[idx]) return;
+        const currentPointerAngle = Math.atan2(p.y - layout.cy, p.x - layout.cx);
+        const currentDistance = Math.max(8, Math.hypot(p.x - layout.cx, p.y - layout.cy));
+        const factor = currentDistance / interaction.startDistance;
+        const raw = interaction.baseAngle + (currentPointerAngle - interaction.startPointerAngle);
+        overlayLayers[idx].angle = snapAngleToFlat(raw);
+        overlayLayers[idx].w = Math.max(40, Math.min(canvas.width, interaction.baseW * factor));
+        overlayLayers[idx].h = Math.max(40, Math.min(canvas.height, interaction.baseH * factor));
+      }
+
+      render();
+      e.preventDefault();
+    });
+
+    function finishInteraction() {
+      if (!interaction) return;
+      const prevType = interaction.type;
+      const pressItem = interaction.item || null;
+      clearLongPressTimer();
+      interaction = null;
+      activeGuides = [];
+      if (prevType === 'press-item' && !longPressTriggered && pressItem) {
+        selected = pressItem;
+        multiSelected = [];
+        syncControlsFromSelectedText();
+      }
+      updateMultiToolbar();
+      render();
+      if (prevType !== 'press-item' && prevType !== 'multi-hold') pushHistory();
+      longPressTriggered = false;
+    }
+
+    canvas.addEventListener('pointerup', (e) => {
+      finishInteraction();
+      e.preventDefault();
+    });
+
+    canvas.addEventListener('pointercancel', () => {
+      finishInteraction();
+    });
+
+    (async () => {
+      await restoreImportedFonts();
+      restoreSelectedFontId();
+      setLiveChip();
+      alphaRange.disabled = true;
+      updateMultiToolbar();
+      drawPlaceholder();
+      updatePreviewFrameForCanvas();
+      pushHistory();
+      render();
+    })();
+
+    window.addEventListener('resize', updatePreviewFrameForCanvas);
+  </script>
+</body>
+</html>
