@@ -526,9 +526,13 @@
     };
     const FONT_UI = {
       baseDesktop: 50,
-      baseMobile: 50,
+      baseMobile: 150,
       min: 20,
-      max: 200
+      max: 1000
+    };
+    const SCALE_UI = {
+      min: 0.2,
+      max: 12
     };
 
     const STORAGE_IMPORTED_FONTS = 'plog_editor_imported_fonts_v1';
@@ -599,10 +603,10 @@
     function updateControlUISize() {
       const mobile = window.matchMedia('(pointer: coarse)').matches || window.innerWidth <= 860;
       CONTROL_UI.selectionGap = mobile ? 10 : 7;
-      CONTROL_UI.resizeHandleSize = mobile ? 20 : 16;
-      CONTROL_UI.rotateHandleRadius = mobile ? 16 : 13;
-      CONTROL_UI.deleteHandleRadius = mobile ? 16 : 13;
-      CONTROL_UI.hitRadius = mobile ? 22 : 15; // at least ~44px touch target on mobile
+      CONTROL_UI.resizeHandleSize = mobile ? 32 : 16;
+      CONTROL_UI.rotateHandleRadius = mobile ? 17 : 13;
+      CONTROL_UI.deleteHandleRadius = mobile ? 17 : 13;
+      CONTROL_UI.hitRadius = mobile ? 28 : 15; // ~56px touch target on mobile
     }
 
     function getFontStack() {
@@ -1115,11 +1119,12 @@
       ctx.lineWidth = 2.6;
       ctx.shadowColor = 'rgba(0,0,0,0.25)';
       ctx.shadowBlur = 4;
+      const crossSize = Math.max(6.5, CONTROL_UI.deleteHandleRadius * 0.38);
       ctx.beginPath();
-      ctx.moveTo(controls.delete.x - 6.5, controls.delete.y - 6.5);
-      ctx.lineTo(controls.delete.x + 6.5, controls.delete.y + 6.5);
-      ctx.moveTo(controls.delete.x + 6.5, controls.delete.y - 6.5);
-      ctx.lineTo(controls.delete.x - 6.5, controls.delete.y + 6.5);
+      ctx.moveTo(controls.delete.x - crossSize, controls.delete.y - crossSize);
+      ctx.lineTo(controls.delete.x + crossSize, controls.delete.y + crossSize);
+      ctx.moveTo(controls.delete.x + crossSize, controls.delete.y - crossSize);
+      ctx.lineTo(controls.delete.x - crossSize, controls.delete.y + crossSize);
       ctx.stroke();
       ctx.restore();
 
@@ -1142,13 +1147,19 @@
       ctx.lineWidth = 2.4;
       ctx.shadowColor = 'rgba(0,0,0,0.25)';
       ctx.shadowBlur = 4;
+      const ringR = Math.max(6.8, CONTROL_UI.rotateHandleRadius * 0.52);
       ctx.beginPath();
-      ctx.arc(controls.rotate.x, controls.rotate.y, 6.8, 0.45, 5.45);
+      ctx.arc(controls.rotate.x, controls.rotate.y, ringR, 0.45, 5.45);
       ctx.stroke();
+      const arrowOffset = Math.max(4.8, CONTROL_UI.rotateHandleRadius * 0.37);
+      const arrowTip = Math.max(9.8, CONTROL_UI.rotateHandleRadius * 0.75);
+      const arrowMidY = Math.max(4.1, CONTROL_UI.rotateHandleRadius * 0.32);
+      const arrowInner = Math.max(7.1, CONTROL_UI.rotateHandleRadius * 0.55);
+      const arrowInnerY = Math.max(0.4, CONTROL_UI.rotateHandleRadius * 0.04);
       ctx.beginPath();
-      ctx.moveTo(controls.rotate.x + 4.8, controls.rotate.y - 4.9);
-      ctx.lineTo(controls.rotate.x + 9.8, controls.rotate.y - 4.1);
-      ctx.lineTo(controls.rotate.x + 7.1, controls.rotate.y - 0.4);
+      ctx.moveTo(controls.rotate.x + arrowOffset, controls.rotate.y - (arrowOffset + 0.1));
+      ctx.lineTo(controls.rotate.x + arrowTip, controls.rotate.y - arrowMidY);
+      ctx.lineTo(controls.rotate.x + arrowInner, controls.rotate.y - arrowInnerY);
       ctx.closePath();
       ctx.fillStyle = '#000000';
       ctx.fill();
@@ -2089,7 +2100,7 @@
         const dist = Math.max(8, Math.hypot(p2.x - p1.x, p2.y - p1.y));
         const factor = dist / Math.max(8, interaction.startDistance);
         if (interaction.kind === 'text' && textLayers[interaction.index]) {
-          textLayers[interaction.index].scale = Math.max(0.25, Math.min(6, interaction.baseScale * factor));
+          textLayers[interaction.index].scale = Math.max(SCALE_UI.min, Math.min(SCALE_UI.max, interaction.baseScale * factor));
         } else if (interaction.kind === 'overlay' && overlayLayers[interaction.index]) {
           overlayLayers[interaction.index].w = Math.max(40, Math.min(canvas.width, interaction.baseW * factor));
           overlayLayers[interaction.index].h = Math.max(40, Math.min(canvas.height, interaction.baseH * factor));
@@ -2175,7 +2186,7 @@
         const dx = p.x - interaction.startX;
         const dy = interaction.startY - p.y;
         const scale = interaction.baseScale + (dx + dy) * 0.0023;
-        textLayers[idx].scale = Math.max(0.25, Math.min(6, scale));
+        textLayers[idx].scale = Math.max(SCALE_UI.min, Math.min(SCALE_UI.max, scale));
       } else if (interaction.type === 'resize-overlay') {
         shouldPrevent = true;
         activeGuides = [];
@@ -2198,7 +2209,7 @@
         const currentDistance = Math.max(8, Math.hypot(p.x - layout.cx, p.y - layout.cy));
         const raw = interaction.baseAngle + (currentPointerAngle - interaction.startPointerAngle);
         textLayers[idx].angle = snapAngleToFlat(raw);
-        textLayers[idx].scale = Math.max(0.25, Math.min(6, interaction.baseScale * (currentDistance / interaction.startDistance)));
+        textLayers[idx].scale = Math.max(SCALE_UI.min, Math.min(SCALE_UI.max, interaction.baseScale * (currentDistance / interaction.startDistance)));
       } else if (interaction.type === 'rotate-scale-overlay') {
         shouldPrevent = true;
         activeGuides = [];
