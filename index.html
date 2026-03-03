@@ -415,7 +415,7 @@
             </div>
           </div>
           <div style="margin-top:8px;">
-            <button id="applyGlobalStyleBtn" class="mini-btn" type="button">应用全局到全部文字</button>
+            <button id="applyGlobalStyleBtn" class="mini-btn" type="button">应用全局</button>
           </div>
         </details>
 
@@ -522,7 +522,9 @@
       resizeHandleSize: 16,
       rotateHandleRadius: 13,
       deleteHandleRadius: 13,
-      hitRadius: 15
+      hitRadius: 15,
+      minFrameW: 160,
+      minFrameH: 90
     };
     const FONT_UI = {
       baseDesktop: 50,
@@ -602,11 +604,13 @@
 
     function updateControlUISize() {
       const mobile = window.matchMedia('(pointer: coarse)').matches || window.innerWidth <= 860;
-      CONTROL_UI.selectionGap = mobile ? 10 : 7;
-      CONTROL_UI.resizeHandleSize = mobile ? 32 : 16;
-      CONTROL_UI.rotateHandleRadius = mobile ? 17 : 13;
-      CONTROL_UI.deleteHandleRadius = mobile ? 17 : 13;
-      CONTROL_UI.hitRadius = mobile ? 28 : 15; // ~56px touch target on mobile
+      CONTROL_UI.selectionGap = mobile ? 30 : 10;
+      CONTROL_UI.resizeHandleSize = mobile ? 100 : 20;
+      CONTROL_UI.rotateHandleRadius = mobile ? 50 : 16;
+      CONTROL_UI.deleteHandleRadius = mobile ? 50 : 16;
+      CONTROL_UI.hitRadius = mobile ? 50 : 20; // fixed 100px touch target on mobile
+      CONTROL_UI.minFrameW = mobile ? 200 : 160;
+      CONTROL_UI.minFrameH = mobile ? 120 : 90;
     }
 
     function getFontStack() {
@@ -771,6 +775,20 @@
       return lines;
     }
 
+    function wrapWithNewlines(text, font, emojiFont, maxWidth, letterSpacing, maxLines) {
+      const paragraphs = String(text || '').split('\n');
+      const out = [];
+      for (let i = 0; i < paragraphs.length; i += 1) {
+        const p = paragraphs[i];
+        const wrapped = p ? wrapByWidth(p, font, emojiFont, maxWidth, letterSpacing, maxLines - out.length) : [''];
+        for (const line of wrapped) {
+          out.push(line);
+          if (out.length >= maxLines) return out;
+        }
+      }
+      return out;
+    }
+
     function rotatePoint(localX, localY, angle) {
       const c = Math.cos(angle);
       const s = Math.sin(angle);
@@ -787,8 +805,10 @@
 
     function getSelectionControlPoints(layout) {
       const gap = CONTROL_UI.selectionGap;
-      const fw = layout.w + gap * 2;
-      const fh = layout.h + gap * 2;
+      const bw = Math.max(layout.w, CONTROL_UI.minFrameW);
+      const bh = Math.max(layout.h, CONTROL_UI.minFrameH);
+      const fw = bw + gap * 2;
+      const fh = bh + gap * 2;
       const tl = rotatePoint(-fw / 2, -fh / 2, layout.angle);
       const tr = rotatePoint(fw / 2, -fh / 2, layout.angle);
       const br = rotatePoint(fw / 2, fh / 2, layout.angle);
@@ -796,7 +816,7 @@
         delete: { x: layout.cx + tl.x, y: layout.cy + tl.y },
         resize: { x: layout.cx + tr.x, y: layout.cy + tr.y },
         rotate: { x: layout.cx + br.x, y: layout.cy + br.y },
-        frame: { fw, fh }
+        frame: { fw, fh, bw, bh }
       };
     }
 
@@ -806,7 +826,9 @@
     }
 
     function parseLines() {
-      return bodyInput.value.split('\n').map(t => t.trim()).filter(Boolean);
+      const raw = bodyInput.value.replace(/\r/g, '');
+      if (!raw.trim()) return [];
+      return [raw];
     }
 
     function autoGrowBodyInput() {
@@ -1010,7 +1032,7 @@
         for (let step = 0; step < 12; step += 1) {
           font = `${layerStyle.bodyWeight} ${fontSize}px ${fontStack}`;
           emojiFont = `400 ${fontSize}px ${EMOJI_FONT_STACK}`;
-          lines = wrapByWidth(layer.text, font, emojiFont, maxInnerWidth, layerStyle.letterSpacing, 4);
+          lines = wrapWithNewlines(layer.text, font, emojiFont, maxInnerWidth, layerStyle.letterSpacing, 12);
           lineMetrics = lines.map(v => measureLineMetrics(v, font, emojiFont, layerStyle.letterSpacing));
           const lineW = Math.max(...lineMetrics.map(v => v.visualWidth), 0);
           if (lineW + padX * 2 <= canvas.width - 20) break;
@@ -1095,9 +1117,9 @@
       if (selected.kind === 'overlay') layout = overlayLayouts[selected.index] || null;
       if (!layout) return;
 
-      const gap = CONTROL_UI.selectionGap;
-      const fw = layout.w + gap * 2;
-      const fh = layout.h + gap * 2;
+      const controls = getSelectionControlPoints(layout);
+      const fw = controls.frame.fw;
+      const fh = controls.frame.fh;
 
       ctx.save();
       ctx.translate(layout.cx, layout.cy);
@@ -1106,8 +1128,6 @@
       ctx.strokeStyle = '#ffffff';
       ctx.strokeRect(-fw / 2, -fh / 2, fw, fh);
       ctx.restore();
-
-      const controls = getSelectionControlPoints(layout);
 
       // 左上角删除按钮
       ctx.save();
