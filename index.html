@@ -327,33 +327,24 @@
     }
 
     .preview-card {
-      width: 100%;
-    }
-
-    .preview-bleed {
-      width: 100%;
-      margin: 0;
-    }
-
-    .preview {
-      background: var(--panel);
-      border: 2px solid #d8c39b;
-      border-radius: 8px;
+      border: 3px solid var(--frame);
+      border-radius: 10px;
       padding: 0;
-      display: grid;
-      place-items: center;
       width: 100%;
       overflow: hidden;
       touch-action: pan-y;
+      background: transparent;
+      box-shadow: none;
     }
 
     canvas {
+      display: block;
       width: 100%;
       height: auto;
-      border: 3px solid #b2a9a0;
-      border-radius: 8px;
-      background: #f8f8f8;
-      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      box-shadow: none;
       touch-action: pan-y;
     }
 
@@ -369,23 +360,12 @@
       }
 
       .preview-card {
-        padding: 8px;
-      }
-
-      .preview-bleed {
-        width: calc(100% + 12px);
-        margin-left: -6px;
-        margin-right: -6px;
-      }
-
-      .preview {
         padding: 0;
-        border-width: 2px;
+        border-width: 3px;
       }
 
       canvas {
-        border-width: 0;
-        border-radius: 6px;
+        border-radius: 0;
       }
 
       .grid2 {
@@ -454,12 +434,8 @@
         </div>
       </div>
 
-      <div class="pixel-card preview-card">
-        <div class="preview-bleed">
-          <div class="preview">
-            <canvas id="canvas" width="1080" height="1350"></canvas>
-          </div>
-        </div>
+      <div class="preview-card">
+        <canvas id="canvas" width="1080" height="1350"></canvas>
       </div>
     </div>
   </div>
@@ -503,10 +479,10 @@
         rgb: '0,0,0',
         defaultAlpha: 1,
         radius: 0,
-        padLeft: 17.5,
-        padRight: 18,
-        padTop: 13,
-        padBottom: 19
+        padLeft: 18,
+        padRight: 18.5,
+        padTop: 13.5,
+        padBottom: 19.5
       },
       usePanel: true,
       textShadowBlur: 0
@@ -1765,6 +1741,13 @@
     alignRightBtn.addEventListener('click', () => alignSelectedHorizontal('right'));
     applyGlobalStyleBtn.addEventListener('click', () => {
       pushHistory();
+      const selectedText = getSelectedTextLayer();
+      const targetAlpha = selectedText
+        ? getEffectivePanelAlpha(selectedText)
+        : Math.max(0, Math.min(1, Number(alphaRange.value) / 100));
+      globalStyle.panelAlpha = targetAlpha;
+      alphaRange.value = String(Math.round(targetAlpha * 100));
+      alphaValue.textContent = `${alphaRange.value}%`;
       for (let i = 0; i < textLayers.length; i += 1) {
         textLayers[i].styleOverride = null;
         textLayers[i].fontOverride = null;
