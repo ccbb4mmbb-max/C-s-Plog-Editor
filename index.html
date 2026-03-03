@@ -18,6 +18,16 @@
       src: url("./assets/fonts/ipix-zh.ttf") format("truetype");
       font-display: swap;
     }
+    @font-face {
+      font-family: "SourceHanSansCNExtraLight";
+      src: url("./assets/fonts/SourceHanSansCN-ExtraLight.otf") format("opentype");
+      font-display: swap;
+    }
+    @font-face {
+      font-family: "Silver";
+      src: url("./assets/fonts/Silver.ttf") format("truetype");
+      font-display: swap;
+    }
     :root {
       --bg: #fffef5;
       --card: #F7EOC1;
@@ -107,9 +117,11 @@
     }
 
     textarea {
-      min-height: 150px;
-      resize: vertical;
+      min-height: 0;
+      height: 44px;
+      resize: none;
       line-height: 1.6;
+      overflow-y: hidden;
     }
     input[type="range"] {
       width: 100%;
@@ -177,37 +189,6 @@
     .top-main > div:first-child {
       flex: 1;
       min-width: 180px;
-    }
-
-    .live-toggle {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      background: #fffef5;
-      border: 3px solid #dacaa8;
-      border-radius: 999px;
-      padding: 4px 10px;
-      font-size: 12px;
-    }
-
-    .live-chip {
-      min-width: 52px;
-      text-align: center;
-      border-radius: 999px;
-      border: 2px solid #6e634f;
-      background: #fbf5de;
-      color: #4e4438;
-      padding: 2px 8px;
-      font-family: "Press Start 2P", monospace;
-      font-size: 9px;
-      letter-spacing: 0.2px;
-    }
-
-    .live-chip.on {
-      background: #d8ffd7;
-      color: #154f18;
-      border-color: #1f7a29;
-      box-shadow: 0 0 0 2px #b4f5b4 inset;
     }
 
     .actions {
@@ -357,7 +338,7 @@
       padding: 8px;
       display: grid;
       place-items: center;
-      overflow: auto;
+      overflow: hidden;
       touch-action: pan-y;
       aspect-ratio: 4 / 5;
       min-height: 340px;
@@ -371,13 +352,6 @@
       background: #f8f8f8;
       box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
       touch-action: pan-y;
-    }
-
-    .footer {
-      text-align: center;
-      font-size: 12px;
-      color: #7f6d55;
-      padding: 2px 0 14px;
     }
 
     @media (min-width: 920px) {
@@ -408,15 +382,11 @@
               <input id="imageInput" type="file" accept="image/*,.heic,.heif" />
             </div>
           </div>
-          <div class="live-toggle" title="当前浏览器无法直接输出 Live 动图，开关用于标记状态与排版流程。">
-            <span>Live：</span>
-            <button id="liveToggle" class="live-chip" type="button">OFF</button>
-          </div>
         </div>
 
         <div>
           <label>文字内容（每行一个文字框，回车换行会新增独立框）</label>
-          <textarea id="bodyInput" placeholder="第一行文字\n第二行文字\n第三行文字"></textarea>
+          <textarea id="bodyInput" rows="1" placeholder="第一行文字\n第二行文字\n第三行文字"></textarea>
         </div>
 
         <details class="panel-fold">
@@ -437,6 +407,8 @@
               <select id="fontSelect">
                 <option value="builtin-sourcehan-light">默认字体</option>
                 <option value="ipix-cn">IPix中文像素字体</option>
+                <option value="sourcehan-extralight">思源黑体 ExtraLight</option>
+                <option value="silver">Silver</option>
                 <option value="upload-font">导入自定义字体</option>
               </select>
               <input id="fontFileInput" type="file" accept=".ttf,.otf,.woff,.woff2" style="display:none" />
@@ -462,8 +434,6 @@
         <canvas id="canvas" width="1080" height="1350"></canvas>
       </div>
     </div>
-
-    <p class="footer">说明：Live 开关目前是标记状态；浏览器版暂不直接导出 iPhone Live Photo 动图。</p>
   </div>
   <div id="multiToolbar" class="multi-toolbar">
     <button id="alignLeftBtn" class="mini-btn" type="button">左对齐</button>
@@ -490,21 +460,25 @@
 
     const FONT_FAMILIES = {
       'builtin-sourcehan-light': `"SourceHanSansCNLight", "Source Han Sans SC", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", ${EMOJI_FONT_STACK}`,
-      'ipix-cn': `"IPixCN", "Noto Sans SC", "PingFang SC", ${EMOJI_FONT_STACK}`
+      'ipix-cn': `"IPixCN", "Noto Sans SC", "PingFang SC", ${EMOJI_FONT_STACK}`,
+      'sourcehan-extralight': `"SourceHanSansCNExtraLight", "Source Han Sans SC", "Noto Sans SC", "PingFang SC", ${EMOJI_FONT_STACK}`,
+      'silver': `"Silver", "Noto Sans SC", "PingFang SC", ${EMOJI_FONT_STACK}`
     };
 
     const STYLE_CONFIGS = {
       blackwhite: {
       bodyWeight: 700,
       letterSpacing: 5,
-      lineHeight: 1.14,
+      lineHeight: 1.1,
+      textOffsetY: 1,
       textColor: '#ffffff',
       panel: {
         rgb: '0,0,0',
         defaultAlpha: 1,
         radius: 0,
-        padX: 9,
-        padY: 6
+        padX: 15,
+        padTop: 11,
+        padBottom: 17
       },
       usePanel: true,
       textShadowBlur: 0
@@ -519,7 +493,8 @@
         defaultAlpha: 1,
         radius: 0,
         padX: 9,
-        padY: 6
+        padTop: 6,
+        padBottom: 6
       },
       usePanel: true,
       textShadowBlur: 0
@@ -534,7 +509,8 @@
         defaultAlpha: 0,
         radius: 0,
         padX: 0,
-        padY: 0
+        padTop: 0,
+        padBottom: 0
       },
       usePanel: false,
       textShadowBlur: 0
@@ -549,10 +525,10 @@
       hitRadius: 15
     };
     const FONT_UI = {
-      baseDesktop: 56,
-      baseMobile: 40,
+      baseDesktop: 50,
+      baseMobile: 50,
       min: 20,
-      max: 120
+      max: 200
     };
 
     const STORAGE_IMPORTED_FONTS = 'plog_editor_imported_fonts_v1';
@@ -567,7 +543,6 @@
     const alphaValue = document.getElementById('alphaValue');
     const fontSelect = document.getElementById('fontSelect');
     const fontFileInput = document.getElementById('fontFileInput');
-    const liveToggle = document.getElementById('liveToggle');
     const addOverlayBtn = document.getElementById('addOverlayBtn');
     const overlayInput = document.getElementById('overlayInput');
     const undoBtn = document.getElementById('undoBtn');
@@ -585,7 +560,6 @@
 
     let baseImage = null;
     let baseImageSrc = '';
-    let isLive = false;
 
     // text: { text, x, y, scale, angle }
     let textLayers = [];
@@ -631,11 +605,6 @@
       CONTROL_UI.hitRadius = mobile ? 22 : 15; // at least ~44px touch target on mobile
     }
 
-    function getDefaultPanelAlpha(styleId) {
-      const cfg = getStyleConfig(styleId);
-      return typeof cfg.panel.defaultAlpha === 'number' ? cfg.panel.defaultAlpha : 0.9;
-    }
-
     function getFontStack() {
       return FONT_FAMILIES[fontSelect.value] || FONT_FAMILIES['builtin-sourcehan-light'];
     }
@@ -660,11 +629,6 @@
     function getEffectivePanelAlpha(layer) {
       if (typeof layer.panelAlphaOverride === 'number') return Math.max(0, Math.min(1, layer.panelAlphaOverride));
       return Math.max(0, Math.min(1, globalStyle.panelAlpha));
-    }
-
-    function setLiveChip() {
-      liveToggle.textContent = isLive ? 'LIVE' : 'OFF';
-      liveToggle.classList.toggle('on', isLive);
     }
 
     function drawPlaceholder() {
@@ -693,18 +657,17 @@
     function updatePreviewFrameForCanvas() {
       const preview = canvas.parentElement;
       if (!preview) return;
-      const availableW = Math.max(180, preview.clientWidth - 18);
-      const maxW = Math.min(availableW, 460);
+      const maxW = Math.max(140, preview.clientWidth - 20);
+      const maxH = Math.max(140, preview.clientHeight - 20);
       const ratio = canvas.width / canvas.height;
       let drawW = maxW;
       let drawH = drawW / ratio;
-      const maxH = maxW * 1.6;
       if (drawH > maxH) {
         drawH = maxH;
         drawW = drawH * ratio;
       }
-      canvas.style.width = `${Math.max(140, drawW)}px`;
-      canvas.style.height = `${Math.max(140, drawH)}px`;
+      canvas.style.width = `${drawW}px`;
+      canvas.style.height = `${drawH}px`;
     }
 
     function applyOverlay() {
@@ -840,6 +803,16 @@
 
     function parseLines() {
       return bodyInput.value.split('\n').map(t => t.trim()).filter(Boolean);
+    }
+
+    function autoGrowBodyInput() {
+      const viewportH = (window.visualViewport && window.visualViewport.height) ? window.visualViewport.height : window.innerHeight;
+      const maxH = Math.round(viewportH * 0.36);
+      bodyInput.style.height = 'auto';
+      bodyInput.style.overflowY = 'hidden';
+      const target = Math.max(44, Math.min(bodyInput.scrollHeight, maxH));
+      bodyInput.style.height = `${target}px`;
+      if (bodyInput.scrollHeight > maxH) bodyInput.style.overflowY = 'auto';
     }
 
     function syncTextLayers(lines) {
@@ -984,26 +957,6 @@
       return [points[0], points[1]];
     }
 
-    function drawLiveBadge() {
-      if (!isLive) return;
-      const badgeW = 130;
-      const badgeH = 42;
-      const x = canvas.width - badgeW - 16;
-      const y = 14;
-      ctx.fillStyle = 'rgba(0,0,0,0.62)';
-      drawRoundedRectPath(x, y, badgeW, badgeH, 20);
-      ctx.fill();
-
-      ctx.fillStyle = '#98ff92';
-      ctx.beginPath();
-      ctx.arc(x + 20, y + badgeH / 2, 7, 0, Math.PI * 2);
-      ctx.fill();
-
-      ctx.fillStyle = '#ffffff';
-      ctx.font = '700 20px "Press Start 2P", monospace';
-      ctx.fillText('LIVE', x + 36, y + 29);
-    }
-
     function drawOverlayLayers() {
       overlayLayouts = [];
       for (let i = 0; i < overlayLayers.length; i += 1) {
@@ -1046,7 +999,9 @@
         let lines = [];
         let lineMetrics = [];
         const padX = layerStyle.usePanel ? layerStyle.panel.padX : 0;
-        const padY = layerStyle.usePanel ? layerStyle.panel.padY : 0;
+        const padTop = layerStyle.usePanel ? (layerStyle.panel.padTop || 0) : 0;
+        const padBottom = layerStyle.usePanel ? (layerStyle.panel.padBottom || 0) : 0;
+        const textOffsetY = layerStyle.textOffsetY || 0;
 
         for (let step = 0; step < 12; step += 1) {
           font = `${layerStyle.bodyWeight} ${fontSize}px ${fontStack}`;
@@ -1067,15 +1022,15 @@
         let maxY = Number.NEGATIVE_INFINITY;
         for (let li = 0; li < lines.length; li += 1) {
           const m = lineMetrics[li];
-          const baselineY = li * lineHeight + m.ascent + padY;
+          const baselineY = li * lineHeight + m.ascent + padTop + textOffsetY;
           const visualLeft = padX + m.minLeft;
           const visualRight = padX + m.maxRight;
           const textTop = baselineY - m.ascent;
           const textBottom = baselineY + m.descent;
           const boxLeft = layerStyle.usePanel ? (visualLeft - padX) : visualLeft;
           const boxRight = layerStyle.usePanel ? (visualRight + padX) : visualRight;
-          const boxTop = layerStyle.usePanel ? (textTop - padY) : textTop;
-          const boxBottom = layerStyle.usePanel ? (textBottom + padY) : textBottom;
+          const boxTop = layerStyle.usePanel ? (textTop - padTop) : textTop;
+          const boxBottom = layerStyle.usePanel ? (textBottom + padBottom) : textBottom;
           lineRects.push({
             text: lines[li],
             baselineY,
@@ -1224,7 +1179,6 @@
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       drawImageCover(baseImage);
       applyOverlay();
-      drawLiveBadge();
 
       ctx.textAlign = 'left';
       ctx.shadowColor = 'rgba(0,0,0,0.00)';
@@ -1429,7 +1383,6 @@
       return {
         body: bodyInput.value,
         globalStyle: { ...globalStyle },
-        isLive,
         baseImageSrc,
         selected,
         multiSelected: multiSelected.slice(),
@@ -1457,6 +1410,7 @@
       isApplyingHistory = true;
 
       bodyInput.value = state.body;
+      autoGrowBodyInput();
       const remembered = globalStyle.fontId;
       globalStyle.styleId = state.globalStyle && STYLE_CONFIGS[state.globalStyle.styleId] ? state.globalStyle.styleId : globalStyle.styleId;
       globalStyle.fontId = state.globalStyle && FONT_FAMILIES[state.globalStyle.fontId] ? state.globalStyle.fontId : remembered;
@@ -1466,8 +1420,6 @@
       alphaRange.value = String(Math.round(globalStyle.panelAlpha * 100));
       alphaValue.textContent = `${alphaRange.value}%`;
       previousFontValue = globalStyle.fontId;
-      isLive = !!state.isLive;
-      setLiveChip();
 
       baseImageSrc = state.baseImageSrc || '';
       try {
@@ -1574,6 +1526,7 @@
       if (selected.kind === 'text' && textLayers[selected.index]) {
         textLayers.splice(selected.index, 1);
         bodyInput.value = textLayers.map(v => v.text).join('\n');
+        autoGrowBodyInput();
       } else if (selected.kind === 'overlay' && overlayLayers[selected.index]) {
         overlayLayers.splice(selected.index, 1);
       }
@@ -1761,6 +1714,7 @@
         textLayers = [];
         overlayLayers = [];
         bodyInput.value = '';
+        autoGrowBodyInput();
         render();
         syncControlsFromSelectedText();
         updateMultiToolbar();
@@ -1770,19 +1724,14 @@
       }
     });
 
-    liveToggle.addEventListener('click', () => {
-      isLive = !isLive;
-      setLiveChip();
-      render();
-      pushHistory();
-    });
-
-    bodyInput.addEventListener('input', () => {
+      bodyInput.addEventListener('input', () => {
+      autoGrowBodyInput();
       refreshTextLayersFromTextarea();
       render();
     });
 
     bodyInput.addEventListener('change', () => {
+      autoGrowBodyInput();
       refreshTextLayersFromTextarea();
       render();
       pushHistory();
@@ -2140,7 +2089,7 @@
         const dist = Math.max(8, Math.hypot(p2.x - p1.x, p2.y - p1.y));
         const factor = dist / Math.max(8, interaction.startDistance);
         if (interaction.kind === 'text' && textLayers[interaction.index]) {
-          textLayers[interaction.index].scale = Math.max(0.35, Math.min(4, interaction.baseScale * factor));
+          textLayers[interaction.index].scale = Math.max(0.25, Math.min(6, interaction.baseScale * factor));
         } else if (interaction.kind === 'overlay' && overlayLayers[interaction.index]) {
           overlayLayers[interaction.index].w = Math.max(40, Math.min(canvas.width, interaction.baseW * factor));
           overlayLayers[interaction.index].h = Math.max(40, Math.min(canvas.height, interaction.baseH * factor));
@@ -2226,7 +2175,7 @@
         const dx = p.x - interaction.startX;
         const dy = interaction.startY - p.y;
         const scale = interaction.baseScale + (dx + dy) * 0.0023;
-        textLayers[idx].scale = Math.max(0.35, Math.min(4, scale));
+        textLayers[idx].scale = Math.max(0.25, Math.min(6, scale));
       } else if (interaction.type === 'resize-overlay') {
         shouldPrevent = true;
         activeGuides = [];
@@ -2249,7 +2198,7 @@
         const currentDistance = Math.max(8, Math.hypot(p.x - layout.cx, p.y - layout.cy));
         const raw = interaction.baseAngle + (currentPointerAngle - interaction.startPointerAngle);
         textLayers[idx].angle = snapAngleToFlat(raw);
-        textLayers[idx].scale = Math.max(0.35, Math.min(4, interaction.baseScale * (currentDistance / interaction.startDistance)));
+        textLayers[idx].scale = Math.max(0.25, Math.min(6, interaction.baseScale * (currentDistance / interaction.startDistance)));
       } else if (interaction.type === 'rotate-scale-overlay') {
         shouldPrevent = true;
         activeGuides = [];
@@ -2301,8 +2250,8 @@
       updateControlUISize();
       await restoreImportedFonts();
       restoreSelectedFontId();
-      setLiveChip();
       updateMultiToolbar();
+      autoGrowBodyInput();
       drawPlaceholder();
       updatePreviewFrameForCanvas();
       pushHistory();
@@ -2312,6 +2261,7 @@
     window.addEventListener('resize', () => {
       updatePreviewFrameForCanvas();
       updateControlUISize();
+      autoGrowBodyInput();
     });
   </script>
 </body>
