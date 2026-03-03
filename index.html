@@ -23,11 +23,6 @@
       src: url("./assets/fonts/SourceHanSansCN-ExtraLight.otf") format("opentype");
       font-display: swap;
     }
-    @font-face {
-      font-family: "Silver";
-      src: url("./assets/fonts/Silver.ttf") format("truetype");
-      font-display: swap;
-    }
     :root {
       --bg: #fffef5;
       --card: #F7EOC1;
@@ -408,7 +403,6 @@
                 <option value="builtin-sourcehan-light">默认字体</option>
                 <option value="ipix-cn">IPix中文像素字体</option>
                 <option value="sourcehan-extralight">思源黑体 ExtraLight</option>
-                <option value="silver">Silver</option>
                 <option value="upload-font">导入自定义字体</option>
               </select>
               <input id="fontFileInput" type="file" accept=".ttf,.otf,.woff,.woff2" style="display:none" />
@@ -461,8 +455,7 @@
     const FONT_FAMILIES = {
       'builtin-sourcehan-light': `"SourceHanSansCNLight", "Source Han Sans SC", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", ${EMOJI_FONT_STACK}`,
       'ipix-cn': `"IPixCN", "Noto Sans SC", "PingFang SC", ${EMOJI_FONT_STACK}`,
-      'sourcehan-extralight': `"SourceHanSansCNExtraLight", "Source Han Sans SC", "Noto Sans SC", "PingFang SC", ${EMOJI_FONT_STACK}`,
-      'silver': `"Silver", "Noto Sans SC", "PingFang SC", ${EMOJI_FONT_STACK}`
+      'sourcehan-extralight': `"SourceHanSansCNExtraLight", "Source Han Sans SC", "Noto Sans SC", "PingFang SC", ${EMOJI_FONT_STACK}`
     };
 
     const STYLE_CONFIGS = {
@@ -476,9 +469,9 @@
         rgb: '0,0,0',
         defaultAlpha: 1,
         radius: 0,
-        padX: 15,
-        padTop: 11,
-        padBottom: 17
+        padX: 18,
+        padTop: 13,
+        padBottom: 20
       },
       usePanel: true,
       textShadowBlur: 0
@@ -605,10 +598,10 @@
     function updateControlUISize() {
       const mobile = window.matchMedia('(pointer: coarse)').matches || window.innerWidth <= 860;
       CONTROL_UI.selectionGap = mobile ? 30 : 10;
-      CONTROL_UI.resizeHandleSize = mobile ? 100 : 20;
-      CONTROL_UI.rotateHandleRadius = mobile ? 50 : 16;
-      CONTROL_UI.deleteHandleRadius = mobile ? 50 : 16;
-      CONTROL_UI.hitRadius = mobile ? 50 : 20; // fixed 100px touch target on mobile
+      CONTROL_UI.resizeHandleSize = mobile ? 40 : 20;
+      CONTROL_UI.rotateHandleRadius = mobile ? 40 : 16;
+      CONTROL_UI.deleteHandleRadius = mobile ? 40 : 16;
+      CONTROL_UI.hitRadius = mobile ? 40 : 20; // fixed ~80px touch target on mobile
       CONTROL_UI.minFrameW = mobile ? 200 : 160;
       CONTROL_UI.minFrameH = mobile ? 120 : 90;
     }
@@ -826,9 +819,7 @@
     }
 
     function parseLines() {
-      const raw = bodyInput.value.replace(/\r/g, '');
-      if (!raw.trim()) return [];
-      return [raw];
+      return bodyInput.value.split('\n').map(t => t.trim()).filter(Boolean);
     }
 
     function autoGrowBodyInput() {
@@ -1124,7 +1115,7 @@
       ctx.save();
       ctx.translate(layout.cx, layout.cy);
       ctx.rotate(layout.angle);
-      ctx.lineWidth = 3;
+      ctx.lineWidth = isMobileUI() ? 5 : 4;
       ctx.strokeStyle = '#ffffff';
       ctx.strokeRect(-fw / 2, -fh / 2, fw, fh);
       ctx.restore();
