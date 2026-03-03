@@ -292,6 +292,46 @@
       box-shadow: 0 8px 18px rgba(0,0,0,0.24);
     }
     .multi-toolbar.show { display: inline-flex; }
+    .export-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 40;
+      background: rgba(0,0,0,0.72);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 14px;
+    }
+    .export-modal.show { display: flex; }
+    .export-card {
+      width: min(560px, 100%);
+      max-height: calc(100dvh - 28px);
+      overflow: auto;
+      background: #fffdf3;
+      border: 3px solid #f1c8b6;
+      border-radius: 12px;
+      padding: 12px;
+      display: grid;
+      gap: 10px;
+    }
+    .export-img {
+      width: 100%;
+      border: 2px solid #d7c4ad;
+      border-radius: 8px;
+      background: #f6f6f6;
+    }
+    .export-tip {
+      margin: 0;
+      color: #5c5248;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+    .export-actions {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+    }
 
     button {
       border: 3px solid #7a5b62;
@@ -338,6 +378,7 @@
       display: grid;
       place-items: center;
       overflow: auto;
+      touch-action: pan-y;
     }
 
     canvas {
@@ -347,7 +388,7 @@
       border-radius: 8px;
       background: #f8f8f8;
       box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
-      touch-action: none;
+      touch-action: pan-y;
     }
 
     .footer {
@@ -448,6 +489,16 @@
     <button id="alignCenterBtn" class="mini-btn" type="button">水平居中</button>
     <button id="alignRightBtn" class="mini-btn" type="button">右对齐</button>
   </div>
+  <div id="exportModal" class="export-modal">
+    <div class="export-card">
+      <img id="exportPreviewImage" class="export-img" alt="导出预览图" />
+      <p class="export-tip">提示：在 iPhone 上长按预览图，即可“存储到照片”。</p>
+      <div class="export-actions">
+        <button id="shareSaveBtn" class="green" type="button">保存到相册</button>
+        <button id="closeExportModalBtn" type="button">关闭</button>
+      </div>
+    </div>
+  </div>
 
   <script src="https://cdn.jsdelivr.net/npm/heic2any/dist/heic2any.min.js"></script>
   <script>
@@ -517,7 +568,8 @@
       selectionGap: 7,
       resizeHandleSize: 16,
       rotateHandleRadius: 13,
-      deleteHandleRadius: 13
+      deleteHandleRadius: 13,
+      hitRadius: 15
     };
 
     const STORAGE_IMPORTED_FONTS = 'plog_editor_imported_fonts_v1';
@@ -542,6 +594,10 @@
     const alignCenterBtn = document.getElementById('alignCenterBtn');
     const alignRightBtn = document.getElementById('alignRightBtn');
     const multiToolbar = document.getElementById('multiToolbar');
+    const exportModal = document.getElementById('exportModal');
+    const exportPreviewImage = document.getElementById('exportPreviewImage');
+    const shareSaveBtn = document.getElementById('shareSaveBtn');
+    const closeExportModalBtn = document.getElementById('closeExportModalBtn');
 
     let baseImage = null;
     let baseImageSrc = '';
@@ -562,6 +618,7 @@
 
     let previousFontValue = 'builtin-sourcehan-light';
     let importedFonts = [];
+    let exportBlobUrl = '';
     let longPressTimer = null;
     let longPressTriggered = false;
     const LONG_PRESS_MS = 380;
@@ -573,6 +630,15 @@
 
     function getStyleConfig(styleId) {
       return STYLE_CONFIGS[styleId || styleSelect.value] || STYLE_CONFIGS.blackwhite;
+    }
+
+    function updateControlUISize() {
+      const mobile = window.matchMedia('(pointer: coarse)').matches || window.innerWidth <= 860;
+      CONTROL_UI.selectionGap = mobile ? 10 : 7;
+      CONTROL_UI.resizeHandleSize = mobile ? 20 : 16;
+      CONTROL_UI.rotateHandleRadius = mobile ? 16 : 13;
+      CONTROL_UI.deleteHandleRadius = mobile ? 16 : 13;
+      CONTROL_UI.hitRadius = mobile ? 22 : 15; // at least ~44px touch target on mobile
     }
 
     function getDefaultPanelAlpha(styleId) {
@@ -771,22 +837,17 @@
         if (prev) {
           next.push({ ...prev, text: lines[i] });
         } else {
-          const prevLayer = next[i - 1] || textLayers[i - 1] || null;
-          const prevLayout = textLayouts[i - 1] || null;
-          const flowGap = 14;
-          const flowX = prevLayer ? prevLayer.x : 70;
-          const flowY = prevLayer
-            ? (prevLayer.y + (prevLayout ? prevLayout.h : Math.max(56, Math.round(96 * (prevLayer.scale || 1)))) + flowGap)
-            : Math.max(8, canvas.height - 340 + i * 116);
+          const centerX = Math.max(0, Math.round(canvas.width / 2 - 13));
+          const centerY = Math.max(0, Math.round(canvas.height / 2 - 28));
           next.push({
             text: lines[i],
-            x: Math.max(0, Math.min(canvas.width - 26, flowX)),
-            y: Math.max(0, Math.min(canvas.height - 56, flowY)),
+            x: Math.max(0, Math.min(canvas.width - 26, centerX)),
+            y: Math.max(0, Math.min(canvas.height - 56, centerY)),
             scale: 1,
             angle: 0,
             styleId: styleSelect.value,
             fontId: fontSelect.value,
-            panelAlpha: getDefaultPanelAlpha(styleSelect.value)
+            panelAlpha: Number(alphaRange.value) / 100
           });
         }
       }
@@ -1069,12 +1130,14 @@
       ctx.arc(controls.delete.x, controls.delete.y, CONTROL_UI.deleteHandleRadius, 0, Math.PI * 2);
       ctx.fill();
       ctx.strokeStyle = '#000000';
-      ctx.lineWidth = 2;
+      ctx.lineWidth = 2.6;
+      ctx.shadowColor = 'rgba(0,0,0,0.25)';
+      ctx.shadowBlur = 4;
       ctx.beginPath();
-      ctx.moveTo(controls.delete.x - 5, controls.delete.y - 5);
-      ctx.lineTo(controls.delete.x + 5, controls.delete.y + 5);
-      ctx.moveTo(controls.delete.x + 5, controls.delete.y - 5);
-      ctx.lineTo(controls.delete.x - 5, controls.delete.y + 5);
+      ctx.moveTo(controls.delete.x - 6.5, controls.delete.y - 6.5);
+      ctx.lineTo(controls.delete.x + 6.5, controls.delete.y + 6.5);
+      ctx.moveTo(controls.delete.x + 6.5, controls.delete.y - 6.5);
+      ctx.lineTo(controls.delete.x - 6.5, controls.delete.y + 6.5);
       ctx.stroke();
       ctx.restore();
 
@@ -1082,6 +1145,8 @@
       const s = CONTROL_UI.resizeHandleSize;
       ctx.save();
       ctx.fillStyle = '#ffffff';
+      ctx.shadowColor = 'rgba(0,0,0,0.25)';
+      ctx.shadowBlur = 4;
       ctx.fillRect(controls.resize.x - s / 2, controls.resize.y - s / 2, s, s);
       ctx.restore();
 
@@ -1092,7 +1157,9 @@
       ctx.arc(controls.rotate.x, controls.rotate.y, CONTROL_UI.rotateHandleRadius, 0, Math.PI * 2);
       ctx.fill();
       ctx.strokeStyle = '#000000';
-      ctx.lineWidth = 2;
+      ctx.lineWidth = 2.4;
+      ctx.shadowColor = 'rgba(0,0,0,0.25)';
+      ctx.shadowBlur = 4;
       ctx.beginPath();
       ctx.arc(controls.rotate.x, controls.rotate.y, 6.8, 0.45, 5.45);
       ctx.stroke();
@@ -1453,22 +1520,7 @@
     }
 
     function syncControlsFromSelectedText() {
-      if (!selected || selected.kind !== 'text' || !textLayers[selected.index]) {
-        alphaRange.disabled = true;
-        alphaRange.value = '100';
-        alphaValue.textContent = '100%';
-        return;
-      }
       alphaRange.disabled = false;
-      const layer = textLayers[selected.index];
-      if (layer.styleId && STYLE_CONFIGS[layer.styleId]) styleSelect.value = layer.styleId;
-      if (layer.fontId && FONT_FAMILIES[layer.fontId]) {
-        fontSelect.value = layer.fontId;
-        previousFontValue = layer.fontId;
-      }
-      const alpha = typeof layer.panelAlpha === 'number' ? layer.panelAlpha : getDefaultPanelAlpha(layer.styleId);
-      alphaRange.value = String(Math.round(alpha * 100));
-      alphaValue.textContent = `${Math.round(alpha * 100)}%`;
     }
 
     function removeSelectedLayer() {
@@ -1692,13 +1744,10 @@
     });
 
     styleSelect.addEventListener('change', () => {
-      if (selected && selected.kind === 'text' && textLayers[selected.index]) {
-        textLayers[selected.index].styleId = styleSelect.value;
-        if (typeof textLayers[selected.index].panelAlpha !== 'number') {
-          textLayers[selected.index].panelAlpha = getDefaultPanelAlpha(styleSelect.value);
-        }
-        alphaRange.value = String(Math.round((textLayers[selected.index].panelAlpha || 0) * 100));
-        alphaValue.textContent = `${alphaRange.value}%`;
+      const alpha = Number(alphaRange.value) / 100;
+      for (let i = 0; i < textLayers.length; i += 1) {
+        textLayers[i].styleId = styleSelect.value;
+        textLayers[i].panelAlpha = alpha;
       }
       render();
       pushHistory();
@@ -1712,8 +1761,8 @@
       }
       previousFontValue = fontSelect.value;
       rememberSelectedFont(previousFontValue);
-      if (selected && selected.kind === 'text' && textLayers[selected.index]) {
-        textLayers[selected.index].fontId = previousFontValue;
+      for (let i = 0; i < textLayers.length; i += 1) {
+        textLayers[i].fontId = previousFontValue;
       }
       render();
       pushHistory();
@@ -1723,19 +1772,17 @@
 
     alphaRange.addEventListener('input', () => {
       alphaValue.textContent = `${alphaRange.value}%`;
-      if (selected && selected.kind === 'text' && textLayers[selected.index]) {
-        textLayers[selected.index].panelAlpha = Number(alphaRange.value) / 100;
-        render();
-      }
+      const alpha = Number(alphaRange.value) / 100;
+      for (let i = 0; i < textLayers.length; i += 1) textLayers[i].panelAlpha = alpha;
+      render();
     });
 
     alphaRange.addEventListener('change', () => {
       alphaValue.textContent = `${alphaRange.value}%`;
-      if (selected && selected.kind === 'text' && textLayers[selected.index]) {
-        textLayers[selected.index].panelAlpha = Number(alphaRange.value) / 100;
-        render();
-        pushHistory();
-      }
+      const alpha = Number(alphaRange.value) / 100;
+      for (let i = 0; i < textLayers.length; i += 1) textLayers[i].panelAlpha = alpha;
+      render();
+      pushHistory();
     });
 
     fontFileInput.addEventListener('change', async (e) => {
@@ -1775,9 +1822,7 @@
         fontSelect.value = entry.id;
         previousFontValue = entry.id;
         rememberSelectedFont(entry.id);
-        if (selected && selected.kind === 'text' && textLayers[selected.index]) {
-          textLayers[selected.index].fontId = entry.id;
-        }
+        for (let i = 0; i < textLayers.length; i += 1) textLayers[i].fontId = entry.id;
         render();
         pushHistory();
       } catch (err) {
@@ -1825,12 +1870,53 @@
     alignCenterBtn.addEventListener('click', () => alignSelectedHorizontal('center'));
     alignRightBtn.addEventListener('click', () => alignSelectedHorizontal('right'));
 
-    downloadBtn.addEventListener('click', () => {
+    function closeExportModal() {
+      exportModal.classList.remove('show');
+      if (exportBlobUrl) URL.revokeObjectURL(exportBlobUrl);
+      exportBlobUrl = '';
+      exportPreviewImage.removeAttribute('src');
+    }
+
+    async function openExportPreview() {
       render();
-      const a = document.createElement('a');
-      a.href = canvas.toDataURL('image/jpeg', 0.95);
-      a.download = `plog-${Date.now()}.jpg`;
-      a.click();
+      const blob = await new Promise((resolve, reject) => {
+        canvas.toBlob((b) => {
+          if (b) resolve(b);
+          else reject(new Error('导出图片失败'));
+        }, 'image/jpeg', 0.95);
+      });
+      if (exportBlobUrl) URL.revokeObjectURL(exportBlobUrl);
+      exportBlobUrl = URL.createObjectURL(blob);
+      exportPreviewImage.src = exportBlobUrl;
+      exportModal.classList.add('show');
+    }
+
+    downloadBtn.addEventListener('click', async () => {
+      try {
+        await openExportPreview();
+      } catch (err) {
+        alert(err.message || '导出失败');
+      }
+    });
+
+    closeExportModalBtn.addEventListener('click', closeExportModal);
+    exportModal.addEventListener('click', (e) => {
+      if (e.target === exportModal) closeExportModal();
+    });
+
+    shareSaveBtn.addEventListener('click', async () => {
+      if (!exportBlobUrl) return;
+      try {
+        const resp = await fetch(exportBlobUrl);
+        const blob = await resp.blob();
+        const file = new File([blob], `plog-${Date.now()}.jpg`, { type: 'image/jpeg' });
+        if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+          await navigator.share({ files: [file], title: 'Plog 图片' });
+          return;
+        }
+      } catch (_) {}
+      window.open(exportBlobUrl, '_blank');
+      alert('请在打开的图片页面长按图片，然后选择“存储到照片”。');
     });
 
     canvas.addEventListener('pointerdown', (e) => {
@@ -1843,14 +1929,14 @@
       if (currentLayout) {
         const controls = getSelectionControlPoints(currentLayout);
         const dDel = Math.hypot(p.x - controls.delete.x, p.y - controls.delete.y);
-        if (dDel <= CONTROL_UI.deleteHandleRadius + 3) {
+        if (dDel <= CONTROL_UI.hitRadius) {
           removeSelectedLayer();
           e.preventDefault();
           return;
         }
 
-        const s = CONTROL_UI.resizeHandleSize;
-        if (Math.abs(p.x - controls.resize.x) <= s / 2 + 2 && Math.abs(p.y - controls.resize.y) <= s / 2 + 2) {
+        const resizeHitHalf = Math.max(CONTROL_UI.hitRadius, CONTROL_UI.resizeHandleSize / 2 + 2);
+        if (Math.abs(p.x - controls.resize.x) <= resizeHitHalf && Math.abs(p.y - controls.resize.y) <= resizeHitHalf) {
           if (selected.kind === 'text') {
             interaction = {
               type: 'resize-text',
@@ -1877,7 +1963,7 @@
         }
 
         const dRot = Math.hypot(p.x - controls.rotate.x, p.y - controls.rotate.y);
-        if (dRot <= CONTROL_UI.rotateHandleRadius + 3) {
+        if (dRot <= CONTROL_UI.hitRadius) {
           if (selected.kind === 'text') {
             const l = textLayouts[selected.index];
             interaction = {
@@ -1943,14 +2029,13 @@
         render();
       }, LONG_PRESS_MS);
 
-      canvas.setPointerCapture(e.pointerId);
       render();
-      e.preventDefault();
     });
 
     canvas.addEventListener('pointermove', (e) => {
       if (!interaction) return;
       const p = pointerToCanvasPoint(e);
+      let shouldPrevent = false;
 
       if (interaction.type === 'press-item') {
         const dx = p.x - interaction.startX;
@@ -1969,7 +2054,8 @@
               startX: interaction.startX,
               startY: interaction.startY,
               baseX: textLayers[hit.index].x,
-              baseY: textLayers[hit.index].y
+              baseY: textLayers[hit.index].y,
+              pointerId: interaction.pointerId
             };
           } else {
             interaction = {
@@ -1978,9 +2064,14 @@
               startX: interaction.startX,
               startY: interaction.startY,
               baseX: overlayLayers[hit.index].x,
-              baseY: overlayLayers[hit.index].y
+              baseY: overlayLayers[hit.index].y,
+              pointerId: interaction.pointerId
             };
           }
+          if (typeof interaction.pointerId === 'number') {
+            try { canvas.setPointerCapture(interaction.pointerId); } catch (_) {}
+          }
+          shouldPrevent = true;
         } else {
           return;
         }
@@ -1991,6 +2082,7 @@
       }
 
       if (interaction.type === 'drag-text') {
+        shouldPrevent = true;
         const idx = interaction.index;
         const box = textLayouts[idx];
         if (!box || !textLayers[idx]) return;
@@ -2002,6 +2094,7 @@
         textLayers[idx].x = Math.max(0, Math.min(canvas.width - box.w, snapped.x));
         textLayers[idx].y = Math.max(0, Math.min(canvas.height - box.h, snapped.y));
       } else if (interaction.type === 'drag-overlay') {
+        shouldPrevent = true;
         const idx = interaction.index;
         const box = overlayLayouts[idx];
         if (!box || !overlayLayers[idx]) return;
@@ -2013,6 +2106,7 @@
         overlayLayers[idx].x = Math.max(0, Math.min(canvas.width - box.w, snapped.x));
         overlayLayers[idx].y = Math.max(0, Math.min(canvas.height - box.h, snapped.y));
       } else if (interaction.type === 'resize-text') {
+        shouldPrevent = true;
         activeGuides = [];
         const idx = interaction.index;
         if (!textLayers[idx]) return;
@@ -2021,6 +2115,7 @@
         const scale = interaction.baseScale + (dx + dy) * 0.0023;
         textLayers[idx].scale = Math.max(0.55, Math.min(2.5, scale));
       } else if (interaction.type === 'resize-overlay') {
+        shouldPrevent = true;
         activeGuides = [];
         const idx = interaction.index;
         if (!overlayLayers[idx]) return;
@@ -2032,6 +2127,7 @@
         overlayLayers[idx].w = Math.min(canvas.width, nw);
         overlayLayers[idx].h = Math.min(canvas.height, nh);
       } else if (interaction.type === 'rotate-scale-text') {
+        shouldPrevent = true;
         activeGuides = [];
         const idx = interaction.index;
         const layout = textLayouts[idx];
@@ -2042,6 +2138,7 @@
         textLayers[idx].angle = snapAngleToFlat(raw);
         textLayers[idx].scale = Math.max(0.55, Math.min(2.5, interaction.baseScale * (currentDistance / interaction.startDistance)));
       } else if (interaction.type === 'rotate-scale-overlay') {
+        shouldPrevent = true;
         activeGuides = [];
         const idx = interaction.index;
         const layout = overlayLayouts[idx];
@@ -2056,7 +2153,7 @@
       }
 
       render();
-      e.preventDefault();
+      if (shouldPrevent) e.preventDefault();
     });
 
     function finishInteraction() {
@@ -2079,7 +2176,6 @@
 
     canvas.addEventListener('pointerup', (e) => {
       finishInteraction();
-      e.preventDefault();
     });
 
     canvas.addEventListener('pointercancel', () => {
@@ -2087,10 +2183,10 @@
     });
 
     (async () => {
+      updateControlUISize();
       await restoreImportedFonts();
       restoreSelectedFontId();
       setLiveChip();
-      alphaRange.disabled = true;
       updateMultiToolbar();
       drawPlaceholder();
       updatePreviewFrameForCanvas();
@@ -2098,7 +2194,10 @@
       render();
     })();
 
-    window.addEventListener('resize', updatePreviewFrameForCanvas);
+    window.addEventListener('resize', () => {
+      updatePreviewFrameForCanvas();
+      updateControlUISize();
+    });
   </script>
 </body>
 </html>
