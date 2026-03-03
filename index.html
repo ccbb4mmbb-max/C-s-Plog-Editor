@@ -327,6 +327,7 @@
     }
 
     .preview-card {
+      position: relative;
       border: 3px solid var(--frame);
       border-radius: 10px;
       padding: 0;
@@ -346,6 +347,42 @@
       background: transparent;
       box-shadow: none;
       touch-action: pan-y;
+    }
+    .empty-state {
+      position: absolute;
+      inset: 0;
+      display: none;
+      pointer-events: none;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 14px;
+      color: #6e6962;
+      font-size: 18px;
+      text-shadow: 0 1px 0 rgba(255,255,255,0.75);
+    }
+    .empty-state.show {
+      display: flex;
+    }
+    .add-main-image-btn {
+      pointer-events: auto;
+      width: 66px;
+      height: 66px;
+      border-radius: 50%;
+      border: 3px solid #9f8f7f;
+      background: #fffef7;
+      color: #4f4439;
+      font-size: 36px;
+      line-height: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 3px 3px 0 #c6b07d;
+      padding: 0;
+    }
+    .add-main-image-btn:active {
+      transform: translate(1px, 1px);
+      box-shadow: 2px 2px 0 #c6b07d;
     }
 
     @media (min-width: 920px) {
@@ -385,15 +422,6 @@
 
     <div class="layout">
       <div class="pixel-card row">
-        <div class="top-row">
-          <div class="top-main">
-            <div>
-              <label>导入主图</label>
-              <input id="imageInput" type="file" accept="image/*,.heic,.heif" />
-            </div>
-          </div>
-        </div>
-
         <div>
           <label>文字内容（每行一个文字框，回车换行会新增独立框）</label>
           <textarea id="bodyInput" rows="1" placeholder="第一行文字\n第二行文字\n第三行文字"></textarea>
@@ -438,7 +466,12 @@
       </div>
 
       <div class="preview-card">
+        <input id="imageInput" type="file" accept="image/*,.heic,.heif" style="display:none" />
         <canvas id="canvas" width="1080" height="1350"></canvas>
+        <div id="emptyState" class="empty-state show">
+          <div>先导入一张主图</div>
+          <button id="addMainImageBtn" class="add-main-image-btn" type="button" aria-label="导入主图">+</button>
+        </div>
       </div>
     </div>
   </div>
@@ -547,6 +580,8 @@
     const STORAGE_SELECTED_FONT = 'plog_editor_selected_font_v1';
 
     const imageInput = document.getElementById('imageInput');
+    const emptyState = document.getElementById('emptyState');
+    const addMainImageBtn = document.getElementById('addMainImageBtn');
     const bodyInput = document.getElementById('bodyInput');
     const styleSelect = document.getElementById('styleSelect');
     const alphaRange = document.getElementById('alphaRange');
@@ -665,10 +700,6 @@
       updatePreviewFrameForCanvas();
       ctx.fillStyle = '#f2f2f2';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = '#777';
-      ctx.font = `700 42px ${getFontStack()}`;
-      ctx.textAlign = 'center';
-      ctx.fillText('先导入一张主图', canvas.width / 2, canvas.height / 2);
     }
 
     function drawImageCover(img) {
@@ -697,6 +728,11 @@
 
     function applyOverlay() {
       // Keep original image clean. No global style overlay applied.
+    }
+
+    function syncEmptyState() {
+      if (!emptyState) return;
+      emptyState.classList.toggle('show', !baseImage);
     }
 
     function drawRoundedRectPath(x, y, w, h, r) {
@@ -1219,9 +1255,11 @@
 
     function render() {
       if (!baseImage) {
+        syncEmptyState();
         drawPlaceholder();
         return;
       }
+      syncEmptyState();
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       drawImageCover(baseImage);
@@ -1668,6 +1706,7 @@
         alert(`主图读取失败：${err.message}`);
       }
     });
+    addMainImageBtn.addEventListener('click', () => imageInput.click());
 
       bodyInput.addEventListener('input', () => {
       autoGrowBodyInput();
