@@ -1241,10 +1241,25 @@
     function drawGuides() {
       if (!activeGuides.length) return;
       ctx.save();
-      ctx.lineWidth = 1.6;
-      ctx.strokeStyle = 'rgba(255,255,255,0.95)';
-      ctx.setLineDash([7, 5]);
+      const mobile = isMobileUI();
+      const outerW = mobile ? 5.5 : 4;
+      const innerW = mobile ? 3.2 : 2.4;
+      const dashA = mobile ? [10, 7] : [8, 6];
+      const dashB = mobile ? [7, 6] : [6, 5];
       for (const g of activeGuides) {
+        // Outer dark stroke for contrast on bright backgrounds.
+        ctx.setLineDash(dashA);
+        ctx.lineWidth = outerW;
+        ctx.strokeStyle = 'rgba(0,0,0,0.75)';
+        ctx.beginPath();
+        ctx.moveTo(g.x1, g.y1);
+        ctx.lineTo(g.x2, g.y2);
+        ctx.stroke();
+
+        // Inner bright stroke to make guides pop on dark backgrounds.
+        ctx.setLineDash(dashB);
+        ctx.lineWidth = innerW;
+        ctx.strokeStyle = 'rgba(255,255,255,0.98)';
         ctx.beginPath();
         ctx.moveTo(g.x1, g.y1);
         ctx.lineTo(g.x2, g.y2);
