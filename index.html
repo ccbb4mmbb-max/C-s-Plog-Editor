@@ -362,9 +362,9 @@
       .preview-card {
         padding: 0;
         border-width: 3px;
-        width: calc(100vw - 16px);
-        margin-left: calc(50% - 50vw + 8px);
-        margin-right: calc(50% - 50vw + 8px);
+        width: calc(100vw - 2px);
+        margin-left: calc(50% - 50vw + 1px);
+        margin-right: calc(50% - 50vw + 1px);
       }
 
       canvas {
@@ -585,6 +585,7 @@
 
     let previousFontValue = 'builtin-sourcehan-light';
     let exportBlobUrl = '';
+    const fontLoadCache = new Set();
     const activeTouchPoints = new Map();
     let longPressTimer = null;
     let longPressTriggered = false;
@@ -617,6 +618,25 @@
 
     function getFontStack() {
       return FONT_FAMILIES[fontSelect.value] || FONT_FAMILIES['builtin-sourcehan-light'];
+    }
+
+    async function ensureFontReady(fontId) {
+      if (!document.fonts || !document.fonts.load) return;
+      const id = fontId || 'builtin-sourcehan-light';
+      if (fontLoadCache.has(id)) return;
+      const stack = FONT_FAMILIES[id] || FONT_FAMILIES['builtin-sourcehan-light'];
+      const match = stack.match(/"([^"]+)"/);
+      const family = match ? match[1] : stack.split(',')[0].trim().replace(/^['"]|['"]$/g, '');
+      if (!family) return;
+      try {
+        await Promise.all([
+          document.fonts.load(`400 64px "${family}"`, '测试Aa'),
+          document.fonts.load(`700 64px "${family}"`, '测试Aa')
+        ]);
+        fontLoadCache.add(id);
+      } catch (_) {
+        // keep fallback if font cannot be loaded immediately
+      }
     }
 
     function isMobileUI() {
@@ -1673,12 +1693,14 @@
       pushHistory();
     });
 
-    function applyFontSelection() {
+    async function applyFontSelection() {
       previousFontValue = fontSelect.value;
       rememberSelectedFont(previousFontValue);
       const sel = getSelectedTextLayer();
       if (sel) sel.fontOverride = previousFontValue;
       else globalStyle.fontId = previousFontValue;
+      render();
+      await ensureFontReady(previousFontValue);
       render();
       pushHistory();
     }
