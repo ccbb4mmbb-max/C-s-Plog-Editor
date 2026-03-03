@@ -333,6 +333,7 @@
       padding: 8px;
       display: grid;
       place-items: center;
+      width: 100%;
       overflow: hidden;
       touch-action: pan-y;
     }
@@ -354,6 +355,20 @@
     }
 
     @media (max-width: 760px) {
+      .wrap {
+        padding: 8px;
+      }
+
+      .preview {
+        padding: 0;
+        border-width: 2px;
+      }
+
+      canvas {
+        border-width: 0;
+        border-radius: 6px;
+      }
+
       .grid2 {
         grid-template-columns: 1fr;
       }
@@ -465,9 +480,10 @@
         rgb: '0,0,0',
         defaultAlpha: 1,
         radius: 0,
-        padX: 17,
-        padTop: 12,
-        padBottom: 18
+        padLeft: 17,
+        padRight: 17.5,
+        padTop: 12.5,
+        padBottom: 18.5
       },
       usePanel: true,
       textShadowBlur: 0
@@ -649,7 +665,7 @@
     function updatePreviewFrameForCanvas() {
       const preview = canvas.parentElement;
       if (!preview) return;
-      const maxW = Math.max(140, preview.clientWidth - 20);
+      const maxW = Math.max(140, preview.clientWidth - 2);
       const ratio = canvas.width / canvas.height;
       let drawW = maxW;
       let drawH = drawW / ratio;
@@ -1001,7 +1017,8 @@
         let emojiFont = '';
         let lines = [];
         let lineMetrics = [];
-        const padX = layerStyle.usePanel ? layerStyle.panel.padX : 0;
+        const padLeft = layerStyle.usePanel ? (layerStyle.panel.padLeft ?? layerStyle.panel.padX ?? 0) : 0;
+        const padRight = layerStyle.usePanel ? (layerStyle.panel.padRight ?? layerStyle.panel.padX ?? 0) : 0;
         const padTop = layerStyle.usePanel ? (layerStyle.panel.padTop || 0) : 0;
         const padBottom = layerStyle.usePanel ? (layerStyle.panel.padBottom || 0) : 0;
         const textOffsetY = layerStyle.textOffsetY || 0;
@@ -1012,7 +1029,7 @@
           lines = wrapWithNewlines(layer.text, font, emojiFont, maxInnerWidth, layerStyle.letterSpacing, 12);
           lineMetrics = lines.map(v => measureLineMetrics(v, font, emojiFont, layerStyle.letterSpacing));
           const lineW = Math.max(...lineMetrics.map(v => v.visualWidth), 0);
-          if (lineW + padX * 2 <= canvas.width - 20) break;
+          if (lineW + padLeft + padRight <= canvas.width - 20) break;
           fontSize -= 2;
           if (fontSize <= FONT_UI.min) break;
         }
@@ -1026,18 +1043,18 @@
         for (let li = 0; li < lines.length; li += 1) {
           const m = lineMetrics[li];
           const baselineY = li * lineHeight + m.ascent + padTop + textOffsetY;
-          const visualLeft = padX + m.minLeft;
-          const visualRight = padX + m.maxRight;
+          const visualLeft = padLeft + m.minLeft;
+          const visualRight = padLeft + m.maxRight;
           const textTop = baselineY - m.ascent;
           const textBottom = baselineY + m.descent;
-          const boxLeft = layerStyle.usePanel ? (visualLeft - padX) : visualLeft;
-          const boxRight = layerStyle.usePanel ? (visualRight + padX) : visualRight;
+          const boxLeft = layerStyle.usePanel ? (visualLeft - padLeft) : visualLeft;
+          const boxRight = layerStyle.usePanel ? (visualRight + padRight) : visualRight;
           const boxTop = layerStyle.usePanel ? (textTop - padTop) : textTop;
           const boxBottom = layerStyle.usePanel ? (textBottom + padBottom) : textBottom;
           lineRects.push({
             text: lines[li],
             baselineY,
-            textStartX: padX,
+            textStartX: padLeft,
             bgX: boxLeft,
             bgY: boxTop,
             bgW: Math.max(2, boxRight - boxLeft),
