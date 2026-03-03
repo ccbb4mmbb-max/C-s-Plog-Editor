@@ -335,12 +335,10 @@
       place-items: center;
       overflow: hidden;
       touch-action: pan-y;
-      aspect-ratio: 4 / 5;
-      min-height: 340px;
     }
 
     canvas {
-      width: min(100%, 460px);
+      width: 100%;
       height: auto;
       border: 3px solid #b2a9a0;
       border-radius: 8px;
@@ -373,7 +371,7 @@
         <div class="top-row">
           <div class="top-main">
             <div>
-              <label>导入主图（支持 HEIC）</label>
+              <label>导入主图</label>
               <input id="imageInput" type="file" accept="image/*,.heic,.heif" />
             </div>
           </div>
@@ -403,9 +401,7 @@
                 <option value="builtin-sourcehan-light">默认字体</option>
                 <option value="ipix-cn">IPix中文像素字体</option>
                 <option value="sourcehan-extralight">思源黑体 ExtraLight</option>
-                <option value="upload-font">导入自定义字体</option>
               </select>
-              <input id="fontFileInput" type="file" accept=".ttf,.otf,.woff,.woff2" style="display:none" />
             </div>
           </div>
           <div style="margin-top:8px;">
@@ -469,9 +465,9 @@
         rgb: '0,0,0',
         defaultAlpha: 1,
         radius: 0,
-        padX: 18,
-        padTop: 13,
-        padBottom: 20
+        padX: 17,
+        padTop: 12,
+        padBottom: 18
       },
       usePanel: true,
       textShadowBlur: 0
@@ -530,10 +526,7 @@
       max: 12
     };
 
-    const STORAGE_IMPORTED_FONTS = 'plog_editor_imported_fonts_v1';
     const STORAGE_SELECTED_FONT = 'plog_editor_selected_font_v1';
-    const FONT_DB_NAME = 'plog_editor_font_db_v1';
-    const FONT_DB_STORE = 'fonts';
 
     const imageInput = document.getElementById('imageInput');
     const bodyInput = document.getElementById('bodyInput');
@@ -541,7 +534,6 @@
     const alphaRange = document.getElementById('alphaRange');
     const alphaValue = document.getElementById('alphaValue');
     const fontSelect = document.getElementById('fontSelect');
-    const fontFileInput = document.getElementById('fontFileInput');
     const addOverlayBtn = document.getElementById('addOverlayBtn');
     const overlayInput = document.getElementById('overlayInput');
     const undoBtn = document.getElementById('undoBtn');
@@ -574,7 +566,6 @@
     let activeGuides = [];
 
     let previousFontValue = 'builtin-sourcehan-light';
-    let importedFonts = [];
     let exportBlobUrl = '';
     const activeTouchPoints = new Map();
     let longPressTimer = null;
@@ -659,14 +650,9 @@
       const preview = canvas.parentElement;
       if (!preview) return;
       const maxW = Math.max(140, preview.clientWidth - 20);
-      const maxH = Math.max(140, preview.clientHeight - 20);
       const ratio = canvas.width / canvas.height;
       let drawW = maxW;
       let drawH = drawW / ratio;
-      if (drawH > maxH) {
-        drawH = maxH;
-        drawW = drawH * ratio;
-      }
       canvas.style.width = `${drawW}px`;
       canvas.style.height = `${drawH}px`;
     }
@@ -1278,112 +1264,10 @@
       return overlayLayers.map(o => ({ src: o.src, x: o.x, y: o.y, w: o.w, h: o.h, angle: o.angle || 0 }));
     }
 
-    function openFontDB() {
-      return new Promise((resolve, reject) => {
-        if (!('indexedDB' in window)) {
-          reject(new Error('当前浏览器不支持 IndexedDB'));
-          return;
-        }
-        const req = indexedDB.open(FONT_DB_NAME, 1);
-        req.onupgradeneeded = () => {
-          const db = req.result;
-          if (!db.objectStoreNames.contains(FONT_DB_STORE)) {
-            db.createObjectStore(FONT_DB_STORE, { keyPath: 'id' });
-          }
-        };
-        req.onsuccess = () => resolve(req.result);
-        req.onerror = () => reject(req.error || new Error('字体数据库打开失败'));
-      });
-    }
-
-    async function putFontIntoDB(entry, blob) {
-      const db = await openFontDB();
-      await new Promise((resolve, reject) => {
-        const tx = db.transaction(FONT_DB_STORE, 'readwrite');
-        const store = tx.objectStore(FONT_DB_STORE);
-        store.put({ id: entry.id, name: entry.name, blob });
-        tx.oncomplete = () => resolve();
-        tx.onerror = () => reject(tx.error || new Error('字体写入失败'));
-      });
-      db.close();
-    }
-
-    async function listFontsFromDB() {
-      const db = await openFontDB();
-      const rows = await new Promise((resolve, reject) => {
-        const tx = db.transaction(FONT_DB_STORE, 'readonly');
-        const store = tx.objectStore(FONT_DB_STORE);
-        const req = store.getAll();
-        req.onsuccess = () => resolve(Array.isArray(req.result) ? req.result : []);
-        req.onerror = () => reject(req.error || new Error('字体读取失败'));
-      });
-      db.close();
-      return rows;
-    }
-
     function rememberSelectedFont(fontId) {
       try {
         localStorage.setItem(STORAGE_SELECTED_FONT, fontId);
       } catch (_) {}
-    }
-
-    function ensureFontOption(id, label) {
-      let opt = fontSelect.querySelector(`option[value="${id}"]`);
-      if (!opt) {
-        opt = document.createElement('option');
-        opt.value = id;
-        const uploadOpt = fontSelect.querySelector('option[value="upload-font"]');
-        fontSelect.insertBefore(opt, uploadOpt);
-      }
-      opt.textContent = label;
-      opt.disabled = false;
-    }
-
-    async function registerImportedFont(fontEntry) {
-      const family = `Imported_${fontEntry.id}`;
-      const source = fontEntry.dataUrl ? `url(${fontEntry.dataUrl})` : `url(${fontEntry.objectUrl})`;
-      const face = new FontFace(family, source);
-      await face.load();
-      document.fonts.add(face);
-      FONT_FAMILIES[fontEntry.id] = `"${family}", "Noto Sans SC", "PingFang SC", ${EMOJI_FONT_STACK}`;
-      ensureFontOption(fontEntry.id, fontEntry.name);
-    }
-
-    async function restoreImportedFonts() {
-      // Prefer IndexedDB persistence for large font files.
-      try {
-        const dbRows = await listFontsFromDB();
-        for (const row of dbRows) {
-          if (!row || typeof row.id !== 'string' || typeof row.name !== 'string' || !row.blob) continue;
-          const objectUrl = URL.createObjectURL(row.blob);
-          try {
-            await registerImportedFont({ id: row.id, name: row.name, objectUrl });
-            importedFonts.push({ id: row.id, name: row.name });
-          } finally {
-            URL.revokeObjectURL(objectUrl);
-          }
-        }
-        return;
-      } catch (_) {}
-
-      // Fallback to legacy localStorage data if present.
-      let raw = null;
-      try {
-        raw = localStorage.getItem(STORAGE_IMPORTED_FONTS);
-      } catch (_) {}
-      if (!raw) return;
-      let parsed = [];
-      try {
-        parsed = JSON.parse(raw);
-      } catch (_) {}
-      if (!Array.isArray(parsed)) return;
-      for (const item of parsed) {
-        if (!item || typeof item.id !== 'string' || typeof item.name !== 'string' || typeof item.dataUrl !== 'string') continue;
-        try {
-          await registerImportedFont(item);
-          importedFonts.push({ id: item.id, name: item.name });
-        } catch (_) {}
-      }
     }
 
     function restoreSelectedFontId() {
@@ -1771,11 +1655,6 @@
     });
 
     function applyFontSelection() {
-      if (fontSelect.value === 'upload-font') {
-        fontSelect.value = previousFontValue;
-        fontFileInput.click();
-        return;
-      }
       previousFontValue = fontSelect.value;
       rememberSelectedFont(previousFontValue);
       const sel = getSelectedTextLayer();
@@ -1804,54 +1683,6 @@
       else globalStyle.panelAlpha = alpha;
       render();
       pushHistory();
-    });
-
-    fontFileInput.addEventListener('change', async (e) => {
-      const file = e.target.files && e.target.files[0];
-      if (!file) return;
-      pushHistory();
-      try {
-        const entry = {
-          id: `custom-${Date.now()}`,
-          name: file.name
-        };
-        const objectUrl = URL.createObjectURL(file);
-        try {
-          await registerImportedFont({ ...entry, objectUrl });
-        } finally {
-          URL.revokeObjectURL(objectUrl);
-        }
-        importedFonts.push({ id: entry.id, name: entry.name });
-        try {
-          await putFontIntoDB(entry, file);
-        } catch (_) {
-          // fallback for older data; may hit quota, so keep best-effort only
-          const dataUrl = await new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = () => resolve(reader.result);
-            reader.onerror = () => reject(new Error('字体读取失败'));
-            reader.readAsDataURL(file);
-          });
-          let old = [];
-          try {
-            old = JSON.parse(localStorage.getItem(STORAGE_IMPORTED_FONTS) || '[]');
-          } catch (_) { old = []; }
-          old.push({ id: entry.id, name: entry.name, dataUrl });
-          try { localStorage.setItem(STORAGE_IMPORTED_FONTS, JSON.stringify(old)); } catch (_) {}
-        }
-
-        fontSelect.value = entry.id;
-        previousFontValue = entry.id;
-        rememberSelectedFont(entry.id);
-        const sel = getSelectedTextLayer();
-        if (sel) sel.fontOverride = entry.id;
-        else globalStyle.fontId = entry.id;
-        render();
-        pushHistory();
-      } catch (err) {
-        alert(`字体导入失败：${err.message}`);
-      }
-      fontFileInput.value = '';
     });
 
     addOverlayBtn.addEventListener('click', () => overlayInput.click());
@@ -2270,7 +2101,6 @@
 
     (async () => {
       updateControlUISize();
-      await restoreImportedFonts();
       restoreSelectedFontId();
       updateMultiToolbar();
       autoGrowBodyInput();
