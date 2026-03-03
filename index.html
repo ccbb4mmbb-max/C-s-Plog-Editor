@@ -326,11 +326,20 @@
       border-color: #bda972;
     }
 
+    .preview-card {
+      width: 100%;
+    }
+
+    .preview-bleed {
+      width: 100%;
+      margin: 0;
+    }
+
     .preview {
       background: var(--panel);
-      border: 3px solid var(--frame);
-      border-radius: 10px;
-      padding: 8px;
+      border: 2px solid #d8c39b;
+      border-radius: 8px;
+      padding: 0;
       display: grid;
       place-items: center;
       width: 100%;
@@ -357,6 +366,16 @@
     @media (max-width: 760px) {
       .wrap {
         padding: 8px;
+      }
+
+      .preview-card {
+        padding: 8px;
+      }
+
+      .preview-bleed {
+        width: calc(100% + 12px);
+        margin-left: -6px;
+        margin-right: -6px;
       }
 
       .preview {
@@ -435,8 +454,12 @@
         </div>
       </div>
 
-      <div class="preview">
-        <canvas id="canvas" width="1080" height="1350"></canvas>
+      <div class="pixel-card preview-card">
+        <div class="preview-bleed">
+          <div class="preview">
+            <canvas id="canvas" width="1080" height="1350"></canvas>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -480,10 +503,10 @@
         rgb: '0,0,0',
         defaultAlpha: 1,
         radius: 0,
-        padLeft: 17,
-        padRight: 17.5,
-        padTop: 12.5,
-        padBottom: 18.5
+        padLeft: 17.5,
+        padRight: 18,
+        padTop: 13,
+        padBottom: 19
       },
       usePanel: true,
       textShadowBlur: 0
