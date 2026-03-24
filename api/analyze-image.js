@@ -72,18 +72,14 @@ module.exports = async function handler(req, res) {
       '【3. 当前图片分析任务】',
       '请基于这张图生成“丛式风格”结果，返回 JSON：',
       '{',
-      '  "materials": ["..."],',
-      '  "funny_points": ["..."],',
-      '  "angles": ["..."],',
+      '  "directions": ["..."],',
       '  "captions": ["..."]',
       '}',
       '',
       '字段要求：',
-      '- materials: 4-6条，只写图中真实可用素材点，不编剧情。',
-      '- funny_points: 3-6条，写反差/笑点；如果没有就写轻微观察，不硬凹。',
-      '- angles: 4-6条，写可写方向（口语化）。',
-      '- captions: 必须正好5条，分行数不固定（可1-4行，用\\n分行）。',
-      '- 5条必须故意做长短变化、节奏变化、句式变化，不能同模板复读。',
+      '- directions: 必须正好5条，融合“笑点/反差点”和“文案切入方向”。',
+      '- captions: 必须正好6条，分行数不固定（可1-4行，用\\n分行）。',
+      '- 6条必须故意做长短变化、节奏变化、句式变化，不能同模板复读。',
       '- 至少包含：1条单行短 punchline、1条两行轻吐槽、1条三行反转、1条更口语化碎碎念。',
       '- 每条 captions 尽量有“前半铺垫 + 后半反转”或“前半观察 + 后半吐槽”，但形式不要统一。',
       '- 每行尽量8-18字，允许个别更短或更碎，像“随手说的一句”，自然、不端着。',
@@ -113,12 +109,10 @@ module.exports = async function handler(req, res) {
               type: 'object',
               additionalProperties: false,
               properties: {
-                materials: { type: 'array', items: { type: 'string' } },
-                funny_points: { type: 'array', items: { type: 'string' } },
-                angles: { type: 'array', items: { type: 'string' } },
-                captions: { type: 'array', minItems: 5, maxItems: 5, items: { type: 'string' } }
+                directions: { type: 'array', minItems: 5, maxItems: 5, items: { type: 'string' } },
+                captions: { type: 'array', minItems: 6, maxItems: 6, items: { type: 'string' } }
               },
-              required: ['materials', 'funny_points', 'angles', 'captions']
+              required: ['directions', 'captions']
             }
           }
         },
@@ -186,10 +180,11 @@ module.exports = async function handler(req, res) {
       '本来只想随手拍\n结果它先把我拍服了',
       '我以为只是普通一幕\n盯久了突然不对劲\n反正先发再说',
       '这张图吧\n越看越像我今天的状态\n表面稳住\n内心已经小跑了两圈',
-      '不解释太多\n懂的人会先笑一下'
+      '不解释太多\n懂的人会先笑一下',
+      '先这样发出去\n剩下的交给评论区'
     ];
 
-    const desiredLineCounts = [1, 2, 3, 4, 2];
+    const desiredLineCounts = [1, 2, 3, 4, 2, 3];
 
     const diversifyCaption = (text, idx) => {
       const lines = toCaptionLines(text);
@@ -212,13 +207,12 @@ module.exports = async function handler(req, res) {
     };
 
     const out = {
-      materials: cleanList(parsed.materials, 8),
-      funny_points: cleanList(parsed.funny_points, 8),
-      angles: cleanList(parsed.angles, 8),
-      captions: cleanList(parsed.captions, 5).map((c, i) => diversifyCaption(c, i))
+      directions: cleanList(parsed.directions, 5),
+      captions: cleanList(parsed.captions, 6).map((c, i) => diversifyCaption(c, i))
     };
 
-    while (out.captions.length < 5) out.captions.push(captionFallbacks[out.captions.length]);
+    while (out.directions.length < 5) out.directions.push(`方向${out.directions.length + 1}：从细节切入再轻轻反转`);
+    while (out.captions.length < 6) out.captions.push(captionFallbacks[out.captions.length]);
 
     res.statusCode = 200;
     res.setHeader('Content-Type', 'application/json; charset=utf-8');
