@@ -252,6 +252,7 @@
       border: 2px solid #e3cfab;
       border-radius: 8px;
       padding: 6px 8px;
+      white-space: pre-wrap;
     }
     .ai-status {
       font-size: 12px;
@@ -518,7 +519,7 @@
             <ul id="aiFunnyPoints" class="ai-list"></ul>
             <div class="ai-title">文案方向</div>
             <ul id="aiAngles" class="ai-list"></ul>
-            <div class="ai-title">贴图短句（点“插入”即可上图）</div>
+            <div class="ai-title">丛式文案（5条，点“插入”即可上图）</div>
             <div id="aiCaptions" class="ai-captions"></div>
           </div>
         </div>
@@ -890,7 +891,7 @@
         renderAIList(aiAngles, data.angles || []);
         renderAICaptions(data.captions || []);
         aiResult.style.display = 'block';
-        setAIStatus('已生成，点“插入”可直接加到图片里');
+        setAIStatus('已生成 5 条丛式文案，点“插入”可直接加到图片里');
       } catch (err) {
         setAIStatus(`生成失败：${err.message}`);
       } finally {

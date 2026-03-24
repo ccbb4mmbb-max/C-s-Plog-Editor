@@ -27,26 +27,38 @@ module.exports = async function handler(req, res) {
     }
 
     const systemPrompt = [
-      '你是懂中文、小红书 plog 风格、会看图并会写贴图短句的文案助手。',
-      '你必须根据图片内容给出可直接用于贴图的文案灵感。',
-      '输出不要泛泛描述，不要只复述画面。',
-      '重点写生活观察、幽默感、反差感、自然口语。',
-      '短句适合黑底白字贴图，每句 8-18 个字。',
-      '必须严格输出 JSON，不要输出多余文字。'
+      '你是“丛式风格”的中文 plog 文案助手，必须看图写文案。',
+      '你写出来要像本人随手记录，不像AI，不像文章。',
+      '核心语气：聊天感、轻松、俏皮、轻微吐槽+自嘲、生活观察感。',
+      '允许不完整句，允许短促句，分行要自然。',
+      '禁止：鸡汤、总结、营销、模板口号、宏大叙事。',
+      '禁止使用这类句式：在这个快节奏生活中 / 治愈人生 / 精致生活。',
+      '如果图片信息不足，宁可保守，不要编造具体事实。',
+      '必须严格返回 JSON，不要输出任何额外文字。'
     ].join('\n');
 
     const userPrompt = [
-      '请分析这张图，并返回 JSON：',
+      '请基于图片生成“丛式风格”结果，返回 JSON：',
       '{',
       '  "materials": ["..."],',
       '  "funny_points": ["..."],',
       '  "angles": ["..."],',
       '  "captions": ["..."]',
       '}',
-      '要求：',
-      '- 每个字段尽量 4-6 条；captions 必须正好 6 条。',
-      '- captions 每句 8-18 个字，中文自然，可直接贴图。',
-      '- 避免空泛鸡汤和过度夸张。'
+      '',
+      '字段要求：',
+      '- materials: 4-6条，只写图中真实可用素材点，不编剧情。',
+      '- funny_points: 3-6条，写反差/笑点；如果没有就写轻微观察，不硬凹。',
+      '- angles: 4-6条，写可写方向（口语化）。',
+      '- captions: 必须正好5条；每条是2-4行短句（用\\n分行）。',
+      '- 每行尽量8-18字，像“随手说的一句”，自然、不端着。',
+      '- captions 可直接贴图，避免大段解释。',
+      '',
+      '风格参考（只学语气，不抄原句）：',
+      '- 报告酋长！我已搞到长沙麻辣小龙虾…',
+      '- 最近半夜阳台总有异响…开灯发现两名黑猫警长…',
+      '- 午间快讯：一架微型私人飞机在沙漠坠毁（蚊子掉进饭里）',
+      '- 哈哈哈哈 / 对（这种短促节奏感也可出现）'
     ].join('\n');
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -69,7 +81,7 @@ module.exports = async function handler(req, res) {
                 materials: { type: 'array', items: { type: 'string' } },
                 funny_points: { type: 'array', items: { type: 'string' } },
                 angles: { type: 'array', items: { type: 'string' } },
-                captions: { type: 'array', minItems: 6, maxItems: 6, items: { type: 'string' } }
+                captions: { type: 'array', minItems: 5, maxItems: 5, items: { type: 'string' } }
               },
               required: ['materials', 'funny_points', 'angles', 'captions']
             }
@@ -108,14 +120,49 @@ module.exports = async function handler(req, res) {
       parsed = {};
     }
 
-    const out = {
-      materials: Array.isArray(parsed.materials) ? parsed.materials.slice(0, 8) : [],
-      funny_points: Array.isArray(parsed.funny_points) ? parsed.funny_points.slice(0, 8) : [],
-      angles: Array.isArray(parsed.angles) ? parsed.angles.slice(0, 8) : [],
-      captions: Array.isArray(parsed.captions) ? parsed.captions.slice(0, 6) : []
+    const cleanList = (input, limit) => {
+      if (!Array.isArray(input)) return [];
+      return input
+        .map((v) => (typeof v === 'string' ? v.trim() : ''))
+        .filter(Boolean)
+        .slice(0, limit);
     };
 
-    while (out.captions.length < 6) out.captions.push('这句留给你自由发挥');
+    const splitByPunctuation = (text) => {
+      return String(text || '')
+        .replace(/[。！？；!?;]+/g, '\n')
+        .replace(/[，,]+/g, '\n')
+        .split('\n')
+        .map((s) => s.trim())
+        .filter(Boolean);
+    };
+
+    const normalizeCaption = (text) => {
+      const raw = String(text || '').replace(/\r/g, '').trim();
+      let lines = raw.split('\n').map((s) => s.trim()).filter(Boolean);
+      if (lines.length < 2) lines = splitByPunctuation(raw);
+      lines = lines.filter((s) => s.length >= 2).slice(0, 4);
+      if (lines.length === 0) lines = ['今天这张图', '有点东西'];
+      if (lines.length === 1) lines.push('先记一下');
+      return lines.join('\n');
+    };
+
+    const captionFallbacks = [
+      '今天这画面\n像生活给的随机题',
+      '本来只想随手拍\n结果越看越有戏',
+      '我先把这刻存档\n免得明天不认账',
+      '人是松弛的\n画面倒挺认真',
+      '没什么大道理\n就是今天刚好这样'
+    ];
+
+    const out = {
+      materials: cleanList(parsed.materials, 8),
+      funny_points: cleanList(parsed.funny_points, 8),
+      angles: cleanList(parsed.angles, 8),
+      captions: cleanList(parsed.captions, 5).map(normalizeCaption)
+    };
+
+    while (out.captions.length < 5) out.captions.push(captionFallbacks[out.captions.length]);
 
     res.statusCode = 200;
     res.setHeader('Content-Type', 'application/json; charset=utf-8');

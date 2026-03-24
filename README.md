@@ -33,8 +33,8 @@
   - `materials`
   - `funny_points`
   - `angles`
-  - `captions`（6句）
-- 每句 `captions` 都可以点击“插入”，一键变成新文字框。
+  - `captions`（5条丛式文案，每条 2-4 行）
+- 每条 `captions` 都可以点击“插入”，一键变成新文字框。
 
 ### 环境变量
 - 本地或 Vercel 需要配置：`OPENAI_API_KEY`
