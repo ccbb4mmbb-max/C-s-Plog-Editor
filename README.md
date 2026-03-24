@@ -26,3 +26,16 @@
 ## 手机上用
 把 `index.html` 发到手机后，用浏览器打开即可使用。
 如果你后续要“像 App 一样安装到桌面”，我可以下一步帮你改成 PWA。
+
+## AI 找灵感（MVP）
+- 点击 `AI找灵感`，会把当前主图发到后端接口 `/api/analyze-image`。
+- 后端调用多模态模型返回：
+  - `materials`
+  - `funny_points`
+  - `angles`
+  - `captions`（6句）
+- 每句 `captions` 都可以点击“插入”，一键变成新文字框。
+
+### 环境变量
+- 本地或 Vercel 需要配置：`OPENAI_API_KEY`
+- 参考文件：`.env.example`

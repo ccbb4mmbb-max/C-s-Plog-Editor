@@ -213,6 +213,50 @@
       border-color: #6a7d92;
       background: #eef7ff;
     }
+    .ai-box {
+      border: 2px dashed #d8c39b;
+      border-radius: 10px;
+      background: #fff8ea;
+      padding: 10px;
+      display: grid;
+      gap: 8px;
+    }
+    .ai-title {
+      font-size: 13px;
+      color: #6a5d4e;
+      font-weight: 700;
+    }
+    .ai-list {
+      margin: 0;
+      padding-left: 18px;
+      color: #4f4337;
+      font-size: 13px;
+      line-height: 1.4;
+      display: grid;
+      gap: 4px;
+    }
+    .ai-captions {
+      display: grid;
+      gap: 6px;
+    }
+    .ai-cap-item {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+    .ai-cap-text {
+      flex: 1;
+      font-size: 13px;
+      color: #2f2721;
+      background: #fff;
+      border: 2px solid #e3cfab;
+      border-radius: 8px;
+      padding: 6px 8px;
+    }
+    .ai-status {
+      font-size: 12px;
+      color: #756a5d;
+    }
     details.panel-fold {
       border: 2px solid #d8c39b;
       border-radius: 8px;
@@ -463,6 +507,21 @@
           </div>
           <button class="pink" id="downloadBtn" type="button">下载图片</button>
         </div>
+
+        <div class="ai-box">
+          <button id="aiInspireBtn" type="button">AI找灵感</button>
+          <div id="aiStatus" class="ai-status">上传主图后可用</div>
+          <div id="aiResult" style="display:none;">
+            <div class="ai-title">可利用素材点</div>
+            <ul id="aiMaterials" class="ai-list"></ul>
+            <div class="ai-title">笑点 / 反差点</div>
+            <ul id="aiFunnyPoints" class="ai-list"></ul>
+            <div class="ai-title">文案方向</div>
+            <ul id="aiAngles" class="ai-list"></ul>
+            <div class="ai-title">贴图短句（点“插入”即可上图）</div>
+            <div id="aiCaptions" class="ai-captions"></div>
+          </div>
+        </div>
       </div>
 
       <div class="preview-card">
@@ -596,6 +655,13 @@
     const alignCenterBtn = document.getElementById('alignCenterBtn');
     const alignRightBtn = document.getElementById('alignRightBtn');
     const applyGlobalStyleBtn = document.getElementById('applyGlobalStyleBtn');
+    const aiInspireBtn = document.getElementById('aiInspireBtn');
+    const aiStatus = document.getElementById('aiStatus');
+    const aiResult = document.getElementById('aiResult');
+    const aiMaterials = document.getElementById('aiMaterials');
+    const aiFunnyPoints = document.getElementById('aiFunnyPoints');
+    const aiAngles = document.getElementById('aiAngles');
+    const aiCaptions = document.getElementById('aiCaptions');
     const multiToolbar = document.getElementById('multiToolbar');
     const exportModal = document.getElementById('exportModal');
     const exportPreviewImage = document.getElementById('exportPreviewImage');
@@ -604,6 +670,7 @@
 
     let baseImage = null;
     let baseImageSrc = '';
+    let aiLoading = false;
 
     // text: { text, x, y, scale, angle }
     let textLayers = [];
@@ -733,6 +800,103 @@
     function syncEmptyState() {
       if (!emptyState) return;
       emptyState.classList.toggle('show', !baseImage);
+    }
+
+    function setAIStatus(text) {
+      if (aiStatus) aiStatus.textContent = text;
+    }
+
+    function renderAIList(target, items) {
+      if (!target) return;
+      target.innerHTML = '';
+      (items || []).forEach((item) => {
+        const li = document.createElement('li');
+        li.textContent = item;
+        target.appendChild(li);
+      });
+    }
+
+    function appendCaptionToEditor(text) {
+      const clean = (text || '').trim();
+      if (!clean) return;
+      pushHistory();
+      const prev = bodyInput.value.trim();
+      bodyInput.value = prev ? `${prev}\n${clean}` : clean;
+      autoGrowBodyInput();
+      refreshTextLayersFromTextarea();
+      selected = { kind: 'text', index: textLayers.length - 1 };
+      multiSelected = [];
+      syncControlsFromSelectedText();
+      render();
+      updateMultiToolbar();
+      pushHistory();
+    }
+
+    function renderAICaptions(items) {
+      if (!aiCaptions) return;
+      aiCaptions.innerHTML = '';
+      (items || []).forEach((text) => {
+        const row = document.createElement('div');
+        row.className = 'ai-cap-item';
+        const span = document.createElement('div');
+        span.className = 'ai-cap-text';
+        span.textContent = text;
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'mini-btn';
+        btn.textContent = '插入';
+        btn.addEventListener('click', () => appendCaptionToEditor(text));
+        row.appendChild(span);
+        row.appendChild(btn);
+        aiCaptions.appendChild(row);
+      });
+    }
+
+    function getBaseImageForAIDataUrl() {
+      if (!baseImage) return '';
+      const maxSide = 1600;
+      const ratio = Math.min(1, maxSide / Math.max(baseImage.width, baseImage.height));
+      const w = Math.max(1, Math.round(baseImage.width * ratio));
+      const h = Math.max(1, Math.round(baseImage.height * ratio));
+      const temp = document.createElement('canvas');
+      temp.width = w;
+      temp.height = h;
+      const tctx = temp.getContext('2d');
+      tctx.drawImage(baseImage, 0, 0, w, h);
+      return temp.toDataURL('image/jpeg', 0.86);
+    }
+
+    async function runAIInspiration() {
+      if (aiLoading) return;
+      if (!baseImage) {
+        setAIStatus('请先导入主图，再点 AI找灵感');
+        return;
+      }
+      aiLoading = true;
+      aiInspireBtn.disabled = true;
+      aiResult.style.display = 'none';
+      setAIStatus('AI 正在看图找灵感，请稍等...');
+      try {
+        const imageDataUrl = getBaseImageForAIDataUrl();
+        const resp = await fetch('/api/analyze-image', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ image: imageDataUrl })
+        });
+        const data = await resp.json();
+        if (!resp.ok) throw new Error(data && data.error ? data.error : 'AI 接口调用失败');
+        renderAIList(aiMaterials, data.materials || []);
+        renderAIList(aiFunnyPoints, data.funny_points || []);
+        renderAIList(aiAngles, data.angles || []);
+        renderAICaptions(data.captions || []);
+        aiResult.style.display = 'block';
+        setAIStatus('已生成，点“插入”可直接加到图片里');
+      } catch (err) {
+        setAIStatus(`生成失败：${err.message}`);
+      } finally {
+        aiLoading = false;
+        aiInspireBtn.disabled = false;
+      }
     }
 
     function drawRoundedRectPath(x, y, w, h, r) {
@@ -1712,6 +1876,8 @@
         textLayers = [];
         overlayLayers = [];
         bodyInput.value = '';
+        aiResult.style.display = 'none';
+        setAIStatus('主图已更新，可点击 AI找灵感');
         autoGrowBodyInput();
         render();
         syncControlsFromSelectedText();
@@ -1722,6 +1888,7 @@
       }
     });
     addMainImageBtn.addEventListener('click', () => imageInput.click());
+    aiInspireBtn.addEventListener('click', runAIInspiration);
 
       bodyInput.addEventListener('input', () => {
       autoGrowBodyInput();
