@@ -4,9 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>大脚板丛のPlog编辑器</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-webfont@1.1.0/style.css" rel="stylesheet">
   <style>
     @font-face {
       font-family: "SourceHanSansCNLight";
@@ -518,9 +516,8 @@
             <div>
               <label>字体</label>
               <select id="fontSelect">
-                <option value="builtin-sourcehan-light">默认字体</option>
-                <option value="ipix-cn">IPix中文像素字体</option>
-                <option value="sourcehan-extralight">思源黑体 ExtraLight</option>
+                <option value="default">默认（苹方）</option>
+                <option value="wenkai">霞鹜文楷（手写感）</option>
               </select>
             </div>
           </div>
@@ -605,11 +602,11 @@
     const EMOJI_FONT_STACK = '"Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Twemoji Mozilla", sans-serif';
     const EMOJI_RE = /\p{Extended_Pictographic}/u;
 
-    const FONT_FAMILIES = {
-      'builtin-sourcehan-light': `"SourceHanSansCNLight", "Source Han Sans SC", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", ${EMOJI_FONT_STACK}`,
-      'ipix-cn': `"IPixCN", "Noto Sans SC", "PingFang SC", ${EMOJI_FONT_STACK}`,
-      'sourcehan-extralight': `"SourceHanSansCNExtraLight", "Source Han Sans SC", "Noto Sans SC", "PingFang SC", ${EMOJI_FONT_STACK}`
+    const FONT_MAP = {
+      default: `-apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Noto Sans SC", "Microsoft YaHei", ${EMOJI_FONT_STACK}`,
+      wenkai: `"LXGW WenKai", "LXGW WenKai TC", "PingFang SC", "Noto Sans SC", "Microsoft YaHei", ${EMOJI_FONT_STACK}`
     };
+    const FONT_FAMILIES = FONT_MAP;
 
     const STYLE_CONFIGS = {
       blackwhite: {
@@ -742,7 +739,7 @@
     let overlayLayouts = [];
     let activeGuides = [];
 
-    let previousFontValue = 'builtin-sourcehan-light';
+    let previousFontValue = 'default';
     let exportBlobUrl = '';
     const fontLoadCache = new Set();
     const activeTouchPoints = new Map();
@@ -756,7 +753,7 @@
     const redoStack = [];
     const globalStyle = {
       styleId: 'nobg',
-      fontId: 'builtin-sourcehan-light',
+      fontId: 'default',
       panelAlpha: 1
     };
 
@@ -776,14 +773,14 @@
     }
 
     function getFontStack() {
-      return FONT_FAMILIES[fontSelect.value] || FONT_FAMILIES['builtin-sourcehan-light'];
+      return FONT_FAMILIES[fontSelect.value] || FONT_FAMILIES.default;
     }
 
     async function ensureFontReady(fontId) {
       if (!document.fonts || !document.fonts.load) return;
-      const id = fontId || 'builtin-sourcehan-light';
+      const id = fontId || 'default';
       if (fontLoadCache.has(id)) return;
-      const stack = FONT_FAMILIES[id] || FONT_FAMILIES['builtin-sourcehan-light'];
+      const stack = FONT_FAMILIES[id] || FONT_FAMILIES.default;
       const match = stack.match(/"([^"]+)"/);
       const family = match ? match[1] : stack.split(',')[0].trim().replace(/^['"]|['"]$/g, '');
       if (!family) return;
@@ -1426,7 +1423,7 @@
         const effectiveStyleId = getEffectiveStyleId(layer);
         const effectiveFontId = getEffectiveFontId(layer);
         const layerStyle = getStyleConfig(effectiveStyleId);
-        const fontStack = FONT_FAMILIES[effectiveFontId] || FONT_FAMILIES['builtin-sourcehan-light'];
+        const fontStack = FONT_FAMILIES[effectiveFontId] || FONT_FAMILIES.default;
         const panelAlpha = getEffectivePanelAlpha(layer);
         const baseFont = isMobileUI() ? FONT_UI.baseMobile : FONT_UI.baseDesktop;
         let fontSize = Math.max(FONT_UI.min, Math.min(FONT_UI.max, Math.round(baseFont * layer.scale)));
@@ -1730,8 +1727,8 @@
         fontSelect.value = saved;
         previousFontValue = saved;
       } else {
-        fontSelect.value = 'builtin-sourcehan-light';
-        previousFontValue = 'builtin-sourcehan-light';
+        fontSelect.value = 'default';
+        previousFontValue = 'default';
       }
       globalStyle.fontId = previousFontValue;
     }
@@ -2211,10 +2208,16 @@
     applyGlobalStyleBtn.addEventListener('click', () => {
       pushHistory();
       const selectedText = getSelectedTextLayer();
+      const targetStyleId = selectedText ? getEffectiveStyleId(selectedText) : styleSelect.value;
+      const targetFontId = selectedText ? getEffectiveFontId(selectedText) : fontSelect.value;
       const targetAlpha = selectedText
         ? getEffectivePanelAlpha(selectedText)
         : Math.max(0, Math.min(1, Number(alphaRange.value) / 100));
+      globalStyle.styleId = STYLE_CONFIGS[targetStyleId] ? targetStyleId : globalStyle.styleId;
+      globalStyle.fontId = FONT_FAMILIES[targetFontId] ? targetFontId : globalStyle.fontId;
       globalStyle.panelAlpha = targetAlpha;
+      styleSelect.value = globalStyle.styleId;
+      fontSelect.value = globalStyle.fontId;
       alphaRange.value = String(Math.round(targetAlpha * 100));
       alphaValue.textContent = `${alphaRange.value}%`;
       for (let i = 0; i < textLayers.length; i += 1) {
@@ -2594,6 +2597,7 @@
     (async () => {
       updateControlUISize();
       restoreSelectedFontId();
+      await ensureFontReady(globalStyle.fontId);
       loadStyleProfilesFromStorage();
       renderStyleProfileUI();
       updateMultiToolbar();
