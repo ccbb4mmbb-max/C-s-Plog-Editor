@@ -19,6 +19,7 @@ module.exports = async function handler(req, res) {
     const body = rawBody ? JSON.parse(rawBody) : {};
     const image = body.image;
     const styleProfileRaw = body.style_profile || {};
+    const stylePromptRaw = typeof body.style_prompt === 'string' ? body.style_prompt.trim() : '';
 
     if (!image || typeof image !== 'string' || !image.startsWith('data:image/')) {
       res.statusCode = 400;
@@ -33,9 +34,17 @@ module.exports = async function handler(req, res) {
     const styleName = typeof styleProfileRaw.name === 'string'
       ? styleProfileRaw.name.trim()
       : '默认风格库';
-    const styleSamples = Array.isArray(styleProfileRaw.samples)
+    const styleExamples = Array.isArray(styleProfileRaw.examples)
+      ? styleProfileRaw.examples.map((v) => String(v || '').trim()).filter(Boolean).slice(0, 10)
+      : (Array.isArray(styleProfileRaw.samples)
       ? styleProfileRaw.samples.map((v) => String(v || '').trim()).filter(Boolean).slice(0, 10)
-      : [];
+      : []);
+    const stylePrompt = stylePromptRaw || [
+      '请严格模仿以下写作风格生成 plog 文案，不允许脱离风格自由发挥。',
+      `风格库名称：${styleName || '默认风格库'}`,
+      `风格描述：${styleDescription || '轻松、吐槽、生活感，像和朋友聊天。'}`,
+      `示例语句：${styleExamples.join(' | ')}`
+    ].join('\n');
 
     const systemPrompt = [
       '你是“丛式风格”的中文 plog 文案助手，必须看图写文案。',
@@ -55,7 +64,10 @@ module.exports = async function handler(req, res) {
       styleDescription || '轻松、吐槽、生活感、像和朋友聊天，偶尔小情绪。',
       '',
       '【2. 用户真实语料（请学习语气，不照抄）】',
-      ...(styleSamples.length ? styleSamples.map((s, i) => `${i + 1}. ${s}`) : ['（未提供，使用默认丛式口吻）']),
+      ...(styleExamples.length ? styleExamples.map((s, i) => `${i + 1}. ${s}`) : ['（未提供，使用默认丛式口吻）']),
+      '',
+      '【前端拼接风格指令（最高优先级）】',
+      stylePrompt,
       '',
       '【3. 当前图片分析任务】',
       '请基于这张图生成“丛式风格”结果，返回 JSON：',

@@ -856,7 +856,7 @@
         id: `style-${Date.now()}`,
         name: '丛式默认',
         description: '轻松、吐槽、生活感，像和朋友聊天，真实不端着',
-        samples: [
+        examples: [
           '哈哈哈哈',
           '午间快讯：一架微型私人飞机在沙漠坠毁',
           '报告酋长！我已搞到长沙麻辣小龙虾',
@@ -884,7 +884,9 @@
               id: String(v.id || `style-${Math.random().toString(16).slice(2)}`),
               name: String(v.name || '我的风格库').trim() || '我的风格库',
               description: String(v.description || '').trim(),
-              samples: Array.isArray(v.samples) ? v.samples.map((s) => String(s || '').trim()).filter(Boolean).slice(0, 30) : []
+              examples: Array.isArray(v.examples)
+                ? v.examples.map((s) => String(s || '').trim()).filter(Boolean).slice(0, 30)
+                : (Array.isArray(v.samples) ? v.samples.map((s) => String(s || '').trim()).filter(Boolean).slice(0, 30) : [])
             }))
             .filter((v) => v.id);
         }
@@ -927,18 +929,38 @@
       const active = getActiveStyleProfile();
       if (!active) return;
       styleDescInput.value = active.description || '';
-      styleExamplesInput.value = active.samples.join('\n');
+      styleExamplesInput.value = (active.examples || []).join('\n');
       autoGrowStyleExamplesInput();
     }
 
     function saveCurrentProfileEdits() {
       const active = getActiveStyleProfile();
       if (!active) return;
-      const samples = parseStyleSamplesInput().slice(0, 30);
+      const examples = parseStyleSamplesInput().slice(0, 30);
       active.description = (styleDescInput.value || '').trim();
-      active.samples = samples;
+      active.examples = examples;
       saveStyleProfilesToStorage();
       renderStyleProfileUI();
+    }
+
+    function buildStylePrompt(profile) {
+      const p = profile || {};
+      const description = (p.description || '').trim() || '轻松、吐槽、生活感，像和朋友聊天。';
+      const examples = Array.isArray(p.examples) ? p.examples.slice(0, 10) : [];
+      return [
+        '请严格模仿以下写作风格生成 plog 文案，不允许脱离风格自由发挥。',
+        '',
+        '【风格描述】',
+        description,
+        '',
+        '【用户真实语料（学习语气，不要照抄）】',
+        ...(examples.length ? examples.map((s, i) => `${i + 1}. ${s}`) : ['（未提供）']),
+        '',
+        '【生成任务】',
+        '基于当前图片内容，生成 3-5 条同风格文案。',
+        '每条用短句分行，保持口语、自然、轻吐槽、生活感。',
+        '每条尽量有前半铺垫 + 后半反转。'
+      ].join('\n');
     }
 
     function renderAIList(target, items) {
@@ -1009,8 +1031,8 @@
       }
       saveCurrentProfileEdits();
       const activeProfile = getActiveStyleProfile();
-      const styleSamples = activeProfile ? (activeProfile.samples || []).slice(0, 10) : [];
-      if (styleSamples.length < 3) {
+      const styleExamples = activeProfile ? (activeProfile.examples || []).slice(0, 10) : [];
+      if (styleExamples.length < 3) {
         setAIStatus('请先在风格库里至少填写 3 条历史文案语料');
         return;
       }
@@ -1028,8 +1050,9 @@
             style_profile: {
               name: activeProfile ? activeProfile.name : '默认风格',
               description: activeProfile ? (activeProfile.description || '') : '',
-              samples: styleSamples
-            }
+              examples: styleExamples
+            },
+            style_prompt: buildStylePrompt(activeProfile)
           })
         });
         const data = await resp.json();
@@ -2069,7 +2092,7 @@
         id: `style-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`,
         name: String(name).trim() || '我的风格库',
         description: '轻松、吐槽、生活感，像和朋友聊天',
-        samples: []
+        examples: []
       };
       styleProfiles.push(profile);
       activeStyleProfileId = profile.id;
