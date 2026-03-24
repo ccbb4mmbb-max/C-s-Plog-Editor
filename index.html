@@ -516,7 +516,9 @@
             <div>
               <label>字体</label>
               <select id="fontSelect">
-                <option value="default">默认（苹方）</option>
+                <option value="builtin-sourcehan-light">默认字体</option>
+                <option value="ipix-cn">IPix中文像素字体</option>
+                <option value="sourcehan-extralight">思源黑体 ExtraLight</option>
                 <option value="wenkai">霞鹜文楷（手写感）</option>
               </select>
             </div>
@@ -603,8 +605,12 @@
     const EMOJI_RE = /\p{Extended_Pictographic}/u;
 
     const FONT_MAP = {
-      default: `-apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Noto Sans SC", "Microsoft YaHei", ${EMOJI_FONT_STACK}`,
-      wenkai: `"LXGW WenKai", "LXGW WenKai TC", "PingFang SC", "Noto Sans SC", "Microsoft YaHei", ${EMOJI_FONT_STACK}`
+      'builtin-sourcehan-light': `"SourceHanSansCNLight", "Source Han Sans SC", "Noto Sans SC", "Microsoft YaHei", ${EMOJI_FONT_STACK}`,
+      'ipix-cn': `"IPixCN", "Noto Sans SC", "Microsoft YaHei", ${EMOJI_FONT_STACK}`,
+      'sourcehan-extralight': `"SourceHanSansCNExtraLight", "Source Han Sans SC", "Noto Sans SC", "Microsoft YaHei", ${EMOJI_FONT_STACK}`,
+      'wenkai': `"LXGW WenKai", "LXGW WenKai TC", "Noto Sans SC", "Microsoft YaHei", ${EMOJI_FONT_STACK}`,
+      // Legacy key kept for backward compatibility with older saved states.
+      'default': `"SourceHanSansCNLight", "Source Han Sans SC", "Noto Sans SC", "Microsoft YaHei", ${EMOJI_FONT_STACK}`
     };
     const FONT_FAMILIES = FONT_MAP;
 
@@ -739,7 +745,7 @@
     let overlayLayouts = [];
     let activeGuides = [];
 
-    let previousFontValue = 'default';
+    let previousFontValue = 'builtin-sourcehan-light';
     let exportBlobUrl = '';
     const fontLoadCache = new Set();
     const activeTouchPoints = new Map();
@@ -753,7 +759,7 @@
     const redoStack = [];
     const globalStyle = {
       styleId: 'nobg',
-      fontId: 'default',
+      fontId: 'builtin-sourcehan-light',
       panelAlpha: 1
     };
 
@@ -773,14 +779,14 @@
     }
 
     function getFontStack() {
-      return FONT_FAMILIES[fontSelect.value] || FONT_FAMILIES.default;
+      return FONT_FAMILIES[fontSelect.value] || FONT_FAMILIES['builtin-sourcehan-light'];
     }
 
     async function ensureFontReady(fontId) {
       if (!document.fonts || !document.fonts.load) return;
-      const id = fontId || 'default';
+      const id = fontId || 'builtin-sourcehan-light';
       if (fontLoadCache.has(id)) return;
-      const stack = FONT_FAMILIES[id] || FONT_FAMILIES.default;
+      const stack = FONT_FAMILIES[id] || FONT_FAMILIES['builtin-sourcehan-light'];
       const match = stack.match(/"([^"]+)"/);
       const family = match ? match[1] : stack.split(',')[0].trim().replace(/^['"]|['"]$/g, '');
       if (!family) return;
@@ -1423,7 +1429,7 @@
         const effectiveStyleId = getEffectiveStyleId(layer);
         const effectiveFontId = getEffectiveFontId(layer);
         const layerStyle = getStyleConfig(effectiveStyleId);
-        const fontStack = FONT_FAMILIES[effectiveFontId] || FONT_FAMILIES.default;
+        const fontStack = FONT_FAMILIES[effectiveFontId] || FONT_FAMILIES['builtin-sourcehan-light'];
         const panelAlpha = getEffectivePanelAlpha(layer);
         const baseFont = isMobileUI() ? FONT_UI.baseMobile : FONT_UI.baseDesktop;
         let fontSize = Math.max(FONT_UI.min, Math.min(FONT_UI.max, Math.round(baseFont * layer.scale)));
@@ -1723,12 +1729,13 @@
       try {
         saved = localStorage.getItem(STORAGE_SELECTED_FONT);
       } catch (_) {}
+      if (saved === 'default') saved = 'builtin-sourcehan-light';
       if (saved && FONT_FAMILIES[saved]) {
         fontSelect.value = saved;
         previousFontValue = saved;
       } else {
-        fontSelect.value = 'default';
-        previousFontValue = 'default';
+        fontSelect.value = 'builtin-sourcehan-light';
+        previousFontValue = 'builtin-sourcehan-light';
       }
       globalStyle.fontId = previousFontValue;
     }
