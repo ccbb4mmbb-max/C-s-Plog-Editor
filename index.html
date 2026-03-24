@@ -56,9 +56,9 @@
     .wrap {
       width: min(1040px, 100%);
       margin: 0 auto;
-      padding: 14px;
+      padding: 10px;
       display: grid;
-      gap: 12px;
+      gap: 10px;
     }
 
     .pixel-card {
@@ -72,20 +72,30 @@
       padding: 12px;
     }
 
+    .header-lite {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 8px 10px;
+      border: 2px solid var(--frame);
+      border-radius: 10px;
+      background: rgba(255, 248, 221, 0.92);
+    }
+
     .title-box {
       display: flex;
       justify-content: center;
       align-items: center;
       gap: 8px;
-      font-size: clamp(20px, 5vw, 34px);
+      font-size: clamp(16px, 4.2vw, 24px);
       color: #ffe5f1;
       text-shadow:
-        -2px 0 var(--pink-deep),
-        0 2px var(--pink-deep),
-        2px 0 var(--pink-deep),
-        0 -2px var(--pink-deep),
-        3px 3px 0 #ffffff;
-      letter-spacing: 1px;
+        -1px 0 var(--pink-deep),
+        0 1px var(--pink-deep),
+        1px 0 var(--pink-deep),
+        0 -1px var(--pink-deep),
+        2px 2px 0 #ffffff;
+      letter-spacing: 0.4px;
       line-height: 1.2;
     }
 
@@ -93,10 +103,12 @@
 
     .layout {
       display: grid;
-      gap: 12px;
+      gap: 10px;
     }
 
     .row { display: grid; gap: 10px; }
+    .editor-main { display: grid; gap: 10px; }
+    .editor-card { padding: 10px; }
 
     label {
       font-size: 13px;
@@ -223,10 +235,10 @@
       background: #eef7ff;
     }
     .ai-box {
-      border: 2px dashed #d8c39b;
-      border-radius: 10px;
-      background: #fff8ea;
-      padding: 10px;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      padding: 0;
       display: grid;
       gap: 8px;
     }
@@ -284,6 +296,18 @@
       font-size: 12px;
       color: #7c6e5f;
       line-height: 1.35;
+    }
+    .save-toast {
+      font-size: 12px;
+      color: #2f7f45;
+      opacity: 0;
+      transform: translateY(-2px);
+      transition: opacity 200ms ease, transform 200ms ease;
+      min-height: 16px;
+    }
+    .save-toast.show {
+      opacity: 1;
+      transform: translateY(0);
     }
     details.panel-fold {
       border: 2px solid #d8c39b;
@@ -458,12 +482,6 @@
       box-shadow: 2px 2px 0 #c6b07d;
     }
 
-    @media (min-width: 920px) {
-      .layout {
-        grid-template-columns: 1.35fr 0.85fr;
-      }
-    }
-
     @media (max-width: 760px) {
       .wrap {
         padding: 8px;
@@ -489,12 +507,21 @@
 </head>
 <body>
   <div class="wrap">
-    <div class="pixel-card">
+    <div class="header-lite">
       <div class="title-box"><span class="title-heart">❤</span> 大脚板丛のPlog编辑器 <span class="title-heart">❤</span></div>
     </div>
 
-    <div class="layout">
-      <div class="pixel-card row">
+    <div class="layout editor-main">
+      <div class="preview-card">
+        <input id="imageInput" type="file" accept="image/*,.heic,.heif" style="display:none" />
+        <canvas id="canvas" width="1080" height="1350"></canvas>
+        <div id="emptyState" class="empty-state show">
+          <div>先导入一张主图</div>
+          <button id="addMainImageBtn" class="add-main-image-btn" type="button" aria-label="导入主图">+</button>
+        </div>
+      </div>
+
+      <div class="pixel-card row editor-card">
         <div>
           <label>文字内容（每行一个文字框，回车换行会新增独立框）</label>
           <textarea id="bodyInput" rows="1" placeholder="第一行文字\n第二行文字\n第三行文字"></textarea>
@@ -537,8 +564,11 @@
           </div>
           <button class="pink" id="downloadBtn" type="button">下载图片</button>
         </div>
+      </div>
 
-        <div class="ai-box">
+      <details id="aiPanel" class="panel-fold pixel-card editor-card">
+        <summary>AI灵感与风格库</summary>
+        <div class="ai-box" style="margin-top:8px;">
           <div class="ai-title">用户风格学习库</div>
           <div class="ai-inline">
             <select id="styleProfileSelect" class="ai-style-select"></select>
@@ -554,6 +584,7 @@
           </div>
           <div class="ai-inline">
             <button id="saveStyleProfileBtn" class="mini-btn" type="button">保存当前风格库</button>
+            <span id="saveStyleToast" class="save-toast">✓ 保存成功</span>
           </div>
           <div class="ai-note">AI 会把当前风格库里的语料一起学习后再生成文案。</div>
           <button id="aiInspireBtn" type="button">AI找灵感</button>
@@ -569,16 +600,7 @@
             <div id="aiCaptions" class="ai-captions"></div>
           </div>
         </div>
-      </div>
-
-      <div class="preview-card">
-        <input id="imageInput" type="file" accept="image/*,.heic,.heif" style="display:none" />
-        <canvas id="canvas" width="1080" height="1350"></canvas>
-        <div id="emptyState" class="empty-state show">
-          <div>先导入一张主图</div>
-          <button id="addMainImageBtn" class="add-main-image-btn" type="button" aria-label="导入主图">+</button>
-        </div>
-      </div>
+      </details>
     </div>
   </div>
   <div id="multiToolbar" class="multi-toolbar">
@@ -719,6 +741,7 @@
     const styleDescInput = document.getElementById('styleDescInput');
     const styleExamplesInput = document.getElementById('styleExamplesInput');
     const saveStyleProfileBtn = document.getElementById('saveStyleProfileBtn');
+    const saveStyleToast = document.getElementById('saveStyleToast');
     const newStyleProfileBtn = document.getElementById('newStyleProfileBtn');
     const multiToolbar = document.getElementById('multiToolbar');
     const exportModal = document.getElementById('exportModal');
@@ -729,6 +752,7 @@
     let baseImage = null;
     let baseImageSrc = '';
     let aiLoading = false;
+    let saveToastTimer = null;
     let styleProfiles = [];
     let activeStyleProfileId = '';
 
@@ -884,8 +908,10 @@
       try {
         localStorage.setItem(STORAGE_STYLE_PROFILES, JSON.stringify(styleProfiles));
         localStorage.setItem(STORAGE_ACTIVE_STYLE_PROFILE, activeStyleProfileId || '');
+        return true;
       } catch (_) {
         // ignore quota errors
+        return false;
       }
     }
 
@@ -950,12 +976,22 @@
 
     function saveCurrentProfileEdits() {
       const active = getActiveStyleProfile();
-      if (!active) return;
+      if (!active) return false;
       const examples = parseStyleSamplesInput().slice(0, 30);
       active.description = (styleDescInput.value || '').trim();
       active.examples = examples;
-      saveStyleProfilesToStorage();
+      const ok = saveStyleProfilesToStorage();
       renderStyleProfileUI();
+      return ok;
+    }
+
+    function showSaveStyleFeedback() {
+      if (!saveStyleToast) return;
+      saveStyleToast.classList.add('show');
+      if (saveToastTimer) window.clearTimeout(saveToastTimer);
+      saveToastTimer = window.setTimeout(() => {
+        saveStyleToast.classList.remove('show');
+      }, 1600);
     }
 
     function buildStylePrompt(profile) {
@@ -2090,8 +2126,13 @@
     aiInspireBtn.addEventListener('click', runAIInspiration);
     styleExamplesInput.addEventListener('input', autoGrowStyleExamplesInput);
     saveStyleProfileBtn.addEventListener('click', () => {
-      saveCurrentProfileEdits();
-      setAIStatus('风格库已保存');
+      const ok = saveCurrentProfileEdits();
+      if (ok) {
+        showSaveStyleFeedback();
+        setAIStatus('风格库已保存');
+      } else {
+        setAIStatus('保存失败，请稍后重试');
+      }
     });
     styleProfileSelect.addEventListener('change', () => {
       saveCurrentProfileEdits();
