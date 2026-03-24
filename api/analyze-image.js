@@ -18,6 +18,7 @@ module.exports = async function handler(req, res) {
     const rawBody = typeof req.body === 'string' ? req.body : JSON.stringify(req.body || {});
     const body = rawBody ? JSON.parse(rawBody) : {};
     const image = body.image;
+    const styleProfileRaw = body.style_profile || {};
 
     if (!image || typeof image !== 'string' || !image.startsWith('data:image/')) {
       res.statusCode = 400;
@@ -25,6 +26,16 @@ module.exports = async function handler(req, res) {
       res.end(JSON.stringify({ error: '缺少有效图片数据（data URL）' }));
       return;
     }
+
+    const styleDescription = typeof styleProfileRaw.description === 'string'
+      ? styleProfileRaw.description.trim()
+      : '';
+    const styleName = typeof styleProfileRaw.name === 'string'
+      ? styleProfileRaw.name.trim()
+      : '默认风格库';
+    const styleSamples = Array.isArray(styleProfileRaw.samples)
+      ? styleProfileRaw.samples.map((v) => String(v || '').trim()).filter(Boolean).slice(0, 10)
+      : [];
 
     const systemPrompt = [
       '你是“丛式风格”的中文 plog 文案助手，必须看图写文案。',
@@ -38,7 +49,16 @@ module.exports = async function handler(req, res) {
     ].join('\n');
 
     const userPrompt = [
-      '请基于图片生成“丛式风格”结果，返回 JSON：',
+      `当前风格库：${styleName || '默认风格库'}`,
+      '',
+      '【1. 风格描述】',
+      styleDescription || '轻松、吐槽、生活感、像和朋友聊天，偶尔小情绪。',
+      '',
+      '【2. 用户真实语料（请学习语气，不照抄）】',
+      ...(styleSamples.length ? styleSamples.map((s, i) => `${i + 1}. ${s}`) : ['（未提供，使用默认丛式口吻）']),
+      '',
+      '【3. 当前图片分析任务】',
+      '请基于这张图生成“丛式风格”结果，返回 JSON：',
       '{',
       '  "materials": ["..."],',
       '  "funny_points": ["..."],',
@@ -51,6 +71,7 @@ module.exports = async function handler(req, res) {
       '- funny_points: 3-6条，写反差/笑点；如果没有就写轻微观察，不硬凹。',
       '- angles: 4-6条，写可写方向（口语化）。',
       '- captions: 必须正好5条；每条是2-4行短句（用\\n分行）。',
+      '- 每条 captions 要有“前半铺垫 + 后半反转”或“前半观察 + 后半吐槽”。',
       '- 每行尽量8-18字，像“随手说的一句”，自然、不端着。',
       '- captions 可直接贴图，避免大段解释。',
       '',

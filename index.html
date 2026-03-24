@@ -258,6 +258,24 @@
       font-size: 12px;
       color: #756a5d;
     }
+    .ai-inline {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .ai-inline > * {
+      min-width: 0;
+    }
+    .ai-style-select {
+      flex: 1;
+      min-width: 140px;
+    }
+    .ai-note {
+      font-size: 12px;
+      color: #7c6e5f;
+      line-height: 1.35;
+    }
     details.panel-fold {
       border: 2px solid #d8c39b;
       border-radius: 8px;
@@ -510,6 +528,23 @@
         </div>
 
         <div class="ai-box">
+          <div class="ai-title">用户风格学习库</div>
+          <div class="ai-inline">
+            <select id="styleProfileSelect" class="ai-style-select"></select>
+            <button id="newStyleProfileBtn" class="mini-btn" type="button">新建风格库</button>
+          </div>
+          <div>
+            <label for="styleDescInput">风格描述（会进入 prompt）</label>
+            <input id="styleDescInput" type="text" placeholder="轻松、吐槽、生活感、像跟朋友聊天" />
+          </div>
+          <div>
+            <label for="styleExamplesInput">历史文案语料（数组或每行一条，建议 3-10 条）</label>
+            <textarea id="styleExamplesInput" rows="4" placeholder='["哈哈哈哈","午间快讯：...","..."]'></textarea>
+          </div>
+          <div class="ai-inline">
+            <button id="saveStyleProfileBtn" class="mini-btn" type="button">保存当前风格库</button>
+          </div>
+          <div class="ai-note">AI 会把当前风格库里的语料一起学习后再生成文案。</div>
           <button id="aiInspireBtn" type="button">AI找灵感</button>
           <div id="aiStatus" class="ai-status">上传主图后可用</div>
           <div id="aiResult" style="display:none;">
@@ -638,6 +673,8 @@
     };
 
     const STORAGE_SELECTED_FONT = 'plog_editor_selected_font_v1';
+    const STORAGE_STYLE_PROFILES = 'plog_style_profiles_v1';
+    const STORAGE_ACTIVE_STYLE_PROFILE = 'plog_active_style_profile_v1';
 
     const imageInput = document.getElementById('imageInput');
     const emptyState = document.getElementById('emptyState');
@@ -663,6 +700,11 @@
     const aiFunnyPoints = document.getElementById('aiFunnyPoints');
     const aiAngles = document.getElementById('aiAngles');
     const aiCaptions = document.getElementById('aiCaptions');
+    const styleProfileSelect = document.getElementById('styleProfileSelect');
+    const styleDescInput = document.getElementById('styleDescInput');
+    const styleExamplesInput = document.getElementById('styleExamplesInput');
+    const saveStyleProfileBtn = document.getElementById('saveStyleProfileBtn');
+    const newStyleProfileBtn = document.getElementById('newStyleProfileBtn');
     const multiToolbar = document.getElementById('multiToolbar');
     const exportModal = document.getElementById('exportModal');
     const exportPreviewImage = document.getElementById('exportPreviewImage');
@@ -672,6 +714,8 @@
     let baseImage = null;
     let baseImageSrc = '';
     let aiLoading = false;
+    let styleProfiles = [];
+    let activeStyleProfileId = '';
 
     // text: { text, x, y, scale, angle }
     let textLayers = [];
@@ -807,6 +851,96 @@
       if (aiStatus) aiStatus.textContent = text;
     }
 
+    function createDefaultStyleProfiles() {
+      return [{
+        id: `style-${Date.now()}`,
+        name: '丛式默认',
+        description: '轻松、吐槽、生活感，像和朋友聊天，真实不端着',
+        samples: [
+          '哈哈哈哈',
+          '午间快讯：一架微型私人飞机在沙漠坠毁',
+          '报告酋长！我已搞到长沙麻辣小龙虾',
+          '不只是煎豆腐，还配三种果酱'
+        ]
+      }];
+    }
+
+    function saveStyleProfilesToStorage() {
+      try {
+        localStorage.setItem(STORAGE_STYLE_PROFILES, JSON.stringify(styleProfiles));
+        localStorage.setItem(STORAGE_ACTIVE_STYLE_PROFILE, activeStyleProfileId || '');
+      } catch (_) {
+        // ignore quota errors
+      }
+    }
+
+    function loadStyleProfilesFromStorage() {
+      try {
+        const raw = localStorage.getItem(STORAGE_STYLE_PROFILES);
+        const parsed = raw ? JSON.parse(raw) : null;
+        if (Array.isArray(parsed) && parsed.length) {
+          styleProfiles = parsed
+            .map((v) => ({
+              id: String(v.id || `style-${Math.random().toString(16).slice(2)}`),
+              name: String(v.name || '我的风格库').trim() || '我的风格库',
+              description: String(v.description || '').trim(),
+              samples: Array.isArray(v.samples) ? v.samples.map((s) => String(s || '').trim()).filter(Boolean).slice(0, 30) : []
+            }))
+            .filter((v) => v.id);
+        }
+      } catch (_) {
+        styleProfiles = [];
+      }
+      if (!styleProfiles.length) styleProfiles = createDefaultStyleProfiles();
+      const savedActive = localStorage.getItem(STORAGE_ACTIVE_STYLE_PROFILE) || '';
+      activeStyleProfileId = styleProfiles.some((p) => p.id === savedActive) ? savedActive : styleProfiles[0].id;
+      saveStyleProfilesToStorage();
+    }
+
+    function getActiveStyleProfile() {
+      return styleProfiles.find((p) => p.id === activeStyleProfileId) || styleProfiles[0] || null;
+    }
+
+    function parseStyleSamplesInput() {
+      const raw = (styleExamplesInput.value || '').trim();
+      if (!raw) return [];
+      if (raw.startsWith('[')) {
+        try {
+          const arr = JSON.parse(raw);
+          if (Array.isArray(arr)) {
+            return arr.map((v) => String(v || '').trim()).filter(Boolean);
+          }
+        } catch (_) {}
+      }
+      return raw.split('\n').map((v) => v.trim()).filter(Boolean);
+    }
+
+    function renderStyleProfileUI() {
+      styleProfileSelect.innerHTML = '';
+      styleProfiles.forEach((p) => {
+        const opt = document.createElement('option');
+        opt.value = p.id;
+        opt.textContent = p.name;
+        styleProfileSelect.appendChild(opt);
+      });
+      styleProfileSelect.value = activeStyleProfileId;
+      const active = getActiveStyleProfile();
+      if (!active) return;
+      styleDescInput.value = active.description || '';
+      styleExamplesInput.value = active.samples.join('\n');
+      autoGrowStyleExamplesInput();
+    }
+
+    function saveCurrentProfileEdits() {
+      const active = getActiveStyleProfile();
+      if (!active) return;
+      const samples = parseStyleSamplesInput().slice(0, 30);
+      active.description = (styleDescInput.value || '').trim();
+      active.samples = samples;
+      saveStyleProfilesToStorage();
+      renderStyleProfileUI();
+    }
+
     function renderAIList(target, items) {
       if (!target) return;
       target.innerHTML = '';
@@ -873,6 +1007,13 @@
         setAIStatus('请先导入主图，再点 AI找灵感');
         return;
       }
+      saveCurrentProfileEdits();
+      const activeProfile = getActiveStyleProfile();
+      const styleSamples = activeProfile ? (activeProfile.samples || []).slice(0, 10) : [];
+      if (styleSamples.length < 3) {
+        setAIStatus('请先在风格库里至少填写 3 条历史文案语料');
+        return;
+      }
       aiLoading = true;
       aiInspireBtn.disabled = true;
       aiResult.style.display = 'none';
@@ -882,7 +1023,14 @@
         const resp = await fetch('/api/analyze-image', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ image: imageDataUrl })
+          body: JSON.stringify({
+            image: imageDataUrl,
+            style_profile: {
+              name: activeProfile ? activeProfile.name : '默认风格',
+              description: activeProfile ? (activeProfile.description || '') : '',
+              samples: styleSamples
+            }
+          })
         });
         const data = await resp.json();
         if (!resp.ok) throw new Error(data && data.error ? data.error : 'AI 接口调用失败');
@@ -1055,6 +1203,17 @@
       const target = Math.max(44, Math.min(bodyInput.scrollHeight, maxH));
       bodyInput.style.height = `${target}px`;
       if (bodyInput.scrollHeight > maxH) bodyInput.style.overflowY = 'auto';
+    }
+
+    function autoGrowStyleExamplesInput() {
+      if (!styleExamplesInput) return;
+      const viewportH = (window.visualViewport && window.visualViewport.height) ? window.visualViewport.height : window.innerHeight;
+      const maxH = Math.round(viewportH * 0.26);
+      styleExamplesInput.style.height = 'auto';
+      styleExamplesInput.style.overflowY = 'hidden';
+      const target = Math.max(92, Math.min(styleExamplesInput.scrollHeight, maxH));
+      styleExamplesInput.style.height = `${target}px`;
+      if (styleExamplesInput.scrollHeight > maxH) styleExamplesInput.style.overflowY = 'auto';
     }
 
     function syncTextLayers(lines) {
@@ -1890,6 +2049,34 @@
     });
     addMainImageBtn.addEventListener('click', () => imageInput.click());
     aiInspireBtn.addEventListener('click', runAIInspiration);
+    styleExamplesInput.addEventListener('input', autoGrowStyleExamplesInput);
+    saveStyleProfileBtn.addEventListener('click', () => {
+      saveCurrentProfileEdits();
+      setAIStatus('风格库已保存');
+    });
+    styleProfileSelect.addEventListener('change', () => {
+      saveCurrentProfileEdits();
+      activeStyleProfileId = styleProfileSelect.value;
+      saveStyleProfilesToStorage();
+      renderStyleProfileUI();
+      setAIStatus('已切换风格库');
+    });
+    newStyleProfileBtn.addEventListener('click', () => {
+      const name = window.prompt('新风格库名称（例如：丛式·夜宵版）', '我的风格库');
+      if (!name) return;
+      saveCurrentProfileEdits();
+      const profile = {
+        id: `style-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`,
+        name: String(name).trim() || '我的风格库',
+        description: '轻松、吐槽、生活感，像和朋友聊天',
+        samples: []
+      };
+      styleProfiles.push(profile);
+      activeStyleProfileId = profile.id;
+      saveStyleProfilesToStorage();
+      renderStyleProfileUI();
+      setAIStatus('已新建风格库，请填入历史文案');
+    });
 
       bodyInput.addEventListener('input', () => {
       autoGrowBodyInput();
@@ -2372,8 +2559,11 @@
     (async () => {
       updateControlUISize();
       restoreSelectedFontId();
+      loadStyleProfilesFromStorage();
+      renderStyleProfileUI();
       updateMultiToolbar();
       autoGrowBodyInput();
+      autoGrowStyleExamplesInput();
       drawPlaceholder();
       updatePreviewFrameForCanvas();
       pushHistory();
@@ -2384,6 +2574,7 @@
       updatePreviewFrameForCanvas();
       updateControlUISize();
       autoGrowBodyInput();
+      autoGrowStyleExamplesInput();
     });
   </script>
 </body>
