@@ -890,20 +890,6 @@
       if (aiStatus) aiStatus.textContent = text;
     }
 
-    function createDefaultStyleProfiles() {
-      return [{
-        id: `style-${Date.now()}`,
-        name: '丛式默认',
-        description: '轻松、吐槽、生活感，像和朋友聊天，真实不端着',
-        examples: [
-          '哈哈哈哈',
-          '午间快讯：一架微型私人飞机在沙漠坠毁',
-          '报告酋长！我已搞到长沙麻辣小龙虾',
-          '不只是煎豆腐，还配三种果酱'
-        ]
-      }];
-    }
-
     function saveStyleProfilesToStorage() {
       try {
         localStorage.setItem(STORAGE_STYLE_PROFILES, JSON.stringify(styleProfiles));
@@ -934,13 +920,13 @@
       } catch (_) {
         styleProfiles = [];
       }
-      if (!styleProfiles.length) styleProfiles = createDefaultStyleProfiles();
       const savedActive = localStorage.getItem(STORAGE_ACTIVE_STYLE_PROFILE) || '';
-      activeStyleProfileId = styleProfiles.some((p) => p.id === savedActive) ? savedActive : styleProfiles[0].id;
+      activeStyleProfileId = styleProfiles.some((p) => p.id === savedActive) ? savedActive : (styleProfiles[0] ? styleProfiles[0].id : '');
       saveStyleProfilesToStorage();
     }
 
     function getActiveStyleProfile() {
+      if (!styleProfiles.length) return null;
       return styleProfiles.find((p) => p.id === activeStyleProfileId) || styleProfiles[0] || null;
     }
 
@@ -966,9 +952,19 @@
         opt.textContent = p.name;
         styleProfileSelect.appendChild(opt);
       });
-      styleProfileSelect.value = activeStyleProfileId;
       const active = getActiveStyleProfile();
-      if (!active) return;
+      const hasProfile = !!active;
+      styleProfileSelect.disabled = !hasProfile;
+      styleDescInput.disabled = !hasProfile;
+      styleExamplesInput.disabled = !hasProfile;
+      saveStyleProfileBtn.disabled = !hasProfile;
+      if (!hasProfile) {
+        styleDescInput.value = '';
+        styleExamplesInput.value = '';
+        autoGrowStyleExamplesInput();
+        return;
+      }
+      styleProfileSelect.value = activeStyleProfileId;
       styleDescInput.value = active.description || '';
       styleExamplesInput.value = (active.examples || []).join('\n');
       autoGrowStyleExamplesInput();
@@ -980,9 +976,18 @@
       const examples = parseStyleSamplesInput().slice(0, 30);
       active.description = (styleDescInput.value || '').trim();
       active.examples = examples;
-      const ok = saveStyleProfilesToStorage();
+      return saveStyleProfilesToStorage();
+    }
+
+    function switchStyleProfile(styleId, withFeedback) {
+      if (!styleId) return false;
+      const target = styleProfiles.find((p) => p.id === styleId);
+      if (!target) return false;
+      activeStyleProfileId = target.id;
       renderStyleProfileUI();
-      return ok;
+      saveStyleProfilesToStorage();
+      if (withFeedback) setAIStatus('已切换风格库');
+      return true;
     }
 
     function showSaveStyleFeedback() {
@@ -1082,6 +1087,10 @@
       }
       saveCurrentProfileEdits();
       const activeProfile = getActiveStyleProfile();
+      if (!activeProfile) {
+        setAIStatus('请先新建一个风格库，再生成 AI 文案');
+        return;
+      }
       const styleExamples = activeProfile ? (activeProfile.examples || []).slice(0, 10) : [];
       if (styleExamples.length < 3) {
         setAIStatus('请先在风格库里至少填写 3 条历史文案语料');
@@ -2134,13 +2143,13 @@
         setAIStatus('保存失败，请稍后重试');
       }
     });
-    styleProfileSelect.addEventListener('change', () => {
+    const handleStyleProfileChange = () => {
+      // Save current profile first, then switch to selected one.
       saveCurrentProfileEdits();
-      activeStyleProfileId = styleProfileSelect.value;
-      saveStyleProfilesToStorage();
-      renderStyleProfileUI();
-      setAIStatus('已切换风格库');
-    });
+      switchStyleProfile(styleProfileSelect.value, true);
+    };
+    styleProfileSelect.addEventListener('change', handleStyleProfileChange);
+    styleProfileSelect.addEventListener('input', handleStyleProfileChange);
     newStyleProfileBtn.addEventListener('click', () => {
       const name = window.prompt('新风格库名称（例如：丛式·夜宵版）', '我的风格库');
       if (!name) return;
@@ -2152,9 +2161,7 @@
         examples: []
       };
       styleProfiles.push(profile);
-      activeStyleProfileId = profile.id;
-      saveStyleProfilesToStorage();
-      renderStyleProfileUI();
+      switchStyleProfile(profile.id, false);
       setAIStatus('已新建风格库，请填入历史文案');
     });
 
@@ -2648,6 +2655,7 @@
       await ensureFontReady(globalStyle.fontId);
       loadStyleProfilesFromStorage();
       renderStyleProfileUI();
+      if (!styleProfiles.length) setAIStatus('请先新建风格库并填写语料');
       updateMultiToolbar();
       autoGrowBodyInput();
       autoGrowStyleExamplesInput();

@@ -82,9 +82,11 @@ module.exports = async function handler(req, res) {
       '- materials: 4-6条，只写图中真实可用素材点，不编剧情。',
       '- funny_points: 3-6条，写反差/笑点；如果没有就写轻微观察，不硬凹。',
       '- angles: 4-6条，写可写方向（口语化）。',
-      '- captions: 必须正好5条；每条是2-4行短句（用\\n分行）。',
-      '- 每条 captions 要有“前半铺垫 + 后半反转”或“前半观察 + 后半吐槽”。',
-      '- 每行尽量8-18字，像“随手说的一句”，自然、不端着。',
+      '- captions: 必须正好5条，分行数不固定（可1-4行，用\\n分行）。',
+      '- 5条必须故意做长短变化、节奏变化、句式变化，不能同模板复读。',
+      '- 至少包含：1条单行短 punchline、1条两行轻吐槽、1条三行反转、1条更口语化碎碎念。',
+      '- 每条 captions 尽量有“前半铺垫 + 后半反转”或“前半观察 + 后半吐槽”，但形式不要统一。',
+      '- 每行尽量8-18字，允许个别更短或更碎，像“随手说的一句”，自然、不端着。',
       '- captions 可直接贴图，避免大段解释。',
       '',
       '风格参考（只学语气，不抄原句）：',
@@ -170,29 +172,50 @@ module.exports = async function handler(req, res) {
         .filter(Boolean);
     };
 
-    const normalizeCaption = (text) => {
+    const toCaptionLines = (text) => {
       const raw = String(text || '').replace(/\r/g, '').trim();
       let lines = raw.split('\n').map((s) => s.trim()).filter(Boolean);
-      if (lines.length < 2) lines = splitByPunctuation(raw);
-      lines = lines.filter((s) => s.length >= 2).slice(0, 4);
-      if (lines.length === 0) lines = ['今天这张图', '有点东西'];
-      if (lines.length === 1) lines.push('先记一下');
-      return lines.join('\n');
+      if (!lines.length) lines = splitByPunctuation(raw);
+      lines = lines.filter((s) => s.length >= 2);
+      if (!lines.length) lines = ['今天这张图有点东西'];
+      return lines;
     };
 
     const captionFallbacks = [
-      '今天这画面\n像生活给的随机题',
-      '本来只想随手拍\n结果越看越有戏',
-      '我先把这刻存档\n免得明天不认账',
-      '人是松弛的\n画面倒挺认真',
-      '没什么大道理\n就是今天刚好这样'
+      '今天这画面，离谱得刚刚好',
+      '本来只想随手拍\n结果它先把我拍服了',
+      '我以为只是普通一幕\n盯久了突然不对劲\n反正先发再说',
+      '这张图吧\n越看越像我今天的状态\n表面稳住\n内心已经小跑了两圈',
+      '不解释太多\n懂的人会先笑一下'
     ];
+
+    const desiredLineCounts = [1, 2, 3, 4, 2];
+
+    const diversifyCaption = (text, idx) => {
+      const lines = toCaptionLines(text);
+      const targetCount = desiredLineCounts[idx] || 2;
+      if (targetCount <= 1) return lines[0];
+      const out = [];
+      for (let i = 0; i < lines.length && out.length < targetCount; i += 1) {
+        out.push(lines[i]);
+      }
+      if (out.length < targetCount) {
+        const backup = splitByPunctuation(lines.join('，'));
+        for (let i = 0; i < backup.length && out.length < targetCount; i += 1) {
+          if (!out.includes(backup[i])) out.push(backup[i]);
+        }
+      }
+      while (out.length < targetCount) {
+        out.push(out[out.length - 1] || '先记一下');
+      }
+      return out.slice(0, 4).join('\n');
+    };
 
     const out = {
       materials: cleanList(parsed.materials, 8),
       funny_points: cleanList(parsed.funny_points, 8),
       angles: cleanList(parsed.angles, 8),
-      captions: cleanList(parsed.captions, 5).map(normalizeCaption)
+      captions: cleanList(parsed.captions, 5).map((c, i) => diversifyCaption(c, i))
     };
 
     while (out.captions.length < 5) out.captions.push(captionFallbacks[out.captions.length]);
