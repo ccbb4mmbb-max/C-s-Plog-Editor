@@ -44,7 +44,7 @@
       margin: 0;
       background: linear-gradient(180deg, #fffdf8 0%, var(--bg) 100%);
       color: var(--ink);
-      font-family: "LXGW WenKai", "LXGW WenKai TC", -apple-system, BlinkMacSystemFont, "PingFang SC", "Noto Sans SC", sans-serif;
+      font-family: "IPixCN", "LXGW WenKai", "LXGW WenKai TC", -apple-system, BlinkMacSystemFont, "PingFang SC", "Noto Sans SC", sans-serif;
       min-height: 100dvh;
       -webkit-font-smoothing: antialiased;
       text-rendering: optimizeLegibility;
@@ -55,7 +55,7 @@
     select,
     input,
     textarea {
-      font-family: "LXGW WenKai", "LXGW WenKai TC", -apple-system, BlinkMacSystemFont, "PingFang SC", "Noto Sans SC", sans-serif;
+      font-family: "IPixCN", "LXGW WenKai", "LXGW WenKai TC", -apple-system, BlinkMacSystemFont, "PingFang SC", "Noto Sans SC", sans-serif;
       font-weight: 500;
     }
 
@@ -78,9 +78,9 @@
 
     .header-lite {
       display: flex;
-      justify-content: space-between;
+      justify-content: center;
       align-items: center;
-      padding: 8px 12px;
+      padding: 9px 12px 5px;
       border: 0;
       border-radius: 0;
       background: transparent;
@@ -88,26 +88,15 @@
 
     .title-box {
       display: flex;
-      justify-content: flex-start;
+      justify-content: center;
       align-items: center;
-      gap: 6px;
-      font-size: 18px;
-      color: var(--ink);
+      font-size: 19px;
+      color: var(--accent-strong);
       text-shadow: none;
       letter-spacing: 0;
       line-height: 1.2;
       font-weight: 700;
-    }
-
-    .title-heart { color: var(--accent-strong); }
-
-    .header-more {
-      border: 0;
-      box-shadow: none;
-      background: transparent;
-      padding: 6px 8px;
-      font-size: 20px;
-      color: var(--muted);
+      text-align: center;
     }
 
     .layout {
@@ -135,7 +124,7 @@
       background: #fffdf8;
       padding: 9px;
       font-size: 15px;
-      font-family: "LXGW WenKai", "LXGW WenKai TC", -apple-system, BlinkMacSystemFont, "PingFang SC", "Noto Sans SC", sans-serif;
+      font-family: "IPixCN", "LXGW WenKai", "LXGW WenKai TC", -apple-system, BlinkMacSystemFont, "PingFang SC", "Noto Sans SC", sans-serif;
       font-weight: 500;
       color: #332c24;
       outline: none;
@@ -400,7 +389,7 @@
       padding: 8px 12px;
       cursor: pointer;
       font-size: 14px;
-      font-family: "LXGW WenKai", "LXGW WenKai TC", -apple-system, BlinkMacSystemFont, "PingFang SC", "Noto Sans SC", sans-serif;
+      font-family: "IPixCN", "LXGW WenKai", "LXGW WenKai TC", -apple-system, BlinkMacSystemFont, "PingFang SC", "Noto Sans SC", sans-serif;
       font-weight: 500;
       background: #fffdf8;
       color: #2e2a25;
@@ -610,7 +599,11 @@
       color: var(--muted);
       text-align: center;
       font-size: 12px;
-      min-height: 16px;
+      min-height: 0;
+      display: none;
+    }
+    .canvas-counter.show {
+      display: block;
     }
 
     @media (max-width: 760px) {
@@ -639,8 +632,7 @@
 <body>
   <div class="wrap">
     <div class="header-lite">
-      <div class="title-box"><span class="title-heart">❤</span> 大脚板丛のPlog编辑器 <span class="title-heart">❤</span></div>
-      <button class="header-more" type="button" aria-label="更多">⋯</button>
+      <div class="title-box">大脚板丛のPlog编辑器</div>
     </div>
 
     <div class="layout editor-main">
@@ -652,7 +644,7 @@
           <button id="addMainImageBtn" class="add-main-image-btn" type="button" aria-label="导入主图">+</button>
         </div>
       </div>
-      <div class="canvas-counter">1 / 1</div>
+      <div id="canvasCounter" class="canvas-counter"></div>
     </div>
   </div>
 
@@ -794,6 +786,7 @@
   <script>
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
+    const canvasCounter = document.getElementById('canvasCounter');
     const EMOJI_FONT_STACK = '"Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Twemoji Mozilla", sans-serif';
     const EMOJI_RE = /\p{Extended_Pictographic}/u;
 
@@ -931,6 +924,8 @@
 
     let baseImage = null;
     let baseImageSrc = '';
+    let activeImageIndex = 0;
+    let imageCount = 1;
     let aiLoading = false;
     let saveToastTimer = null;
     let sheetTouchStartY = 0;
@@ -1065,6 +1060,17 @@
     function syncEmptyState() {
       if (!emptyState) return;
       emptyState.classList.toggle('show', !baseImage);
+    }
+
+    function updateCanvasCounter() {
+      if (!canvasCounter) return;
+      if (imageCount > 1) {
+        canvasCounter.textContent = `${activeImageIndex + 1} / ${imageCount}`;
+        canvasCounter.classList.add('show');
+      } else {
+        canvasCounter.textContent = '';
+        canvasCounter.classList.remove('show');
+      }
     }
 
     function setActiveTool(tool) {
@@ -1881,6 +1887,7 @@
     }
 
     function render() {
+      updateCanvasCounter();
       if (!baseImage) {
         syncEmptyState();
         drawPlaceholder();
@@ -2320,6 +2327,8 @@
         baseImage = img;
         setCanvasSizeFromImage(img);
         baseImageSrc = src;
+        activeImageIndex = 0;
+        imageCount = 1;
         selected = null;
         multiSelected = [];
         textLayers = [];
@@ -2905,6 +2914,7 @@
       autoGrowStyleExamplesInput();
       drawPlaceholder();
       updatePreviewFrameForCanvas();
+      updateCanvasCounter();
       pushHistory();
       render();
     })();
