@@ -652,20 +652,21 @@
     .immersive-input {
       position: fixed;
       left: 50%;
-      bottom: calc(var(--immersive-keyboard-offset, 0px) + env(safe-area-inset-bottom) + 74px);
+      top: 50%;
       z-index: 62;
-      width: min(78vw, 560px);
-      min-height: 42px;
-      max-height: 28svh;
+      width: 1px;
+      height: 1px;
+      min-height: 1px;
+      max-height: 1px;
       transform: translateX(-50%);
-      opacity: 0.02;
+      opacity: 0;
       color: transparent;
       caret-color: #ffffff;
       background: transparent;
       border: 0;
       outline: 0;
       resize: none;
-      pointer-events: auto;
+      pointer-events: none;
       line-height: 1.35;
     }
     .immersive-size-wrap {
@@ -674,32 +675,44 @@
       top: 22svh;
       bottom: calc(var(--immersive-keyboard-offset, 0px) + 132px + env(safe-area-inset-bottom));
       z-index: 63;
-      width: 42px;
+      width: 54px;
       min-height: 180px;
       display: flex;
       align-items: center;
       justify-content: center;
       pointer-events: auto;
     }
-    .immersive-size-slider {
-      width: min(52svh, 360px);
-      height: 42px;
-      transform: rotate(-90deg);
-      transform-origin: center;
+    .immersive-size-control {
+      position: relative;
+      width: 54px;
+      height: min(48svh, 360px);
+      min-height: 190px;
       touch-action: none;
     }
-    .immersive-size-slider::-webkit-slider-runnable-track {
-      height: 8px;
-      background: rgba(255,255,255,0.62);
-      border: 1px solid rgba(0,0,0,0.16);
+    .immersive-size-track {
+      position: absolute;
+      inset: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 38px;
+      clip-path: polygon(18% 0, 82% 0, 57% 100%, 43% 100%);
+      background: linear-gradient(180deg, rgba(255,255,255,0.9), rgba(255,255,255,0.26));
+      filter: drop-shadow(0 4px 12px rgba(0,0,0,0.18));
     }
-    .immersive-size-slider::-webkit-slider-thumb {
+    .immersive-size-knob {
+      position: absolute;
+      left: 50%;
+      top: calc(var(--immersive-size-pos, 0.18) * 100%);
       width: 24px;
       height: 24px;
-      margin-top: -9px;
-      border-color: #ffffff;
-      background: #111111;
-      box-shadow: 0 3px 10px rgba(0,0,0,0.22);
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      background: #ffffff;
+      box-shadow: 0 3px 12px rgba(0,0,0,0.28);
+      border: 1px solid rgba(0,0,0,0.12);
+    }
+    .immersive-size-slider {
+      display: none;
     }
     .immersive-toolbar {
       position: fixed;
@@ -709,10 +722,18 @@
       width: min(94vw, 640px);
       transform: translateX(-50%);
       display: grid;
-      gap: 8px;
+      gap: 10px;
       pointer-events: auto;
     }
-    .immersive-tool-row,
+    .immersive-tool-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      padding: 0;
+      background: transparent;
+      box-shadow: none;
+    }
     .immersive-popover {
       display: flex;
       align-items: center;
@@ -720,25 +741,70 @@
       gap: 8px;
       padding: 8px;
       border-radius: 999px;
-      background: rgba(18, 16, 15, 0.74);
+      background: rgba(255, 250, 239, 0.88);
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
-      box-shadow: 0 10px 30px rgba(0,0,0,0.18);
+      box-shadow: 0 8px 22px rgba(0,0,0,0.12);
     }
     .immersive-tool-btn {
-      width: auto;
-      min-width: 56px;
-      padding: 9px 12px;
+      width: 54px;
+      height: 54px;
+      min-width: 54px;
+      padding: 0;
       border: 0;
-      border-radius: 999px;
-      background: rgba(255,255,255,0.12);
-      color: #ffffff;
-      font-size: 13px;
-      box-shadow: none;
+      border-radius: 50%;
+      background: #fff1d8;
+      color: #2c2927;
+      font-size: 18px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 5px 14px rgba(0,0,0,0.12);
     }
     .immersive-tool-btn.active {
-      background: rgba(255,255,255,0.92);
+      background: #f8d4c8;
       color: #171413;
+      outline: 1px solid rgba(218, 127, 160, 0.42);
+    }
+    .tool-icon-palette {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: conic-gradient(#ff6b9c, #ffd76d, #79d4ff, #8bd48a, #ff6b9c);
+      border: 3px solid #fff8ea;
+      box-shadow: inset 0 0 0 1px rgba(0,0,0,0.14);
+    }
+    .tool-icon-align {
+      width: 24px;
+      height: 18px;
+      display: grid;
+      gap: 4px;
+    }
+    .tool-icon-align span {
+      display: block;
+      height: 2px;
+      border-radius: 999px;
+      background: #2c2927;
+    }
+    .tool-icon-align span:nth-child(2) { width: 70%; }
+    .immersive-tool-btn[data-align="center"] .tool-icon-align span {
+      justify-self: center;
+    }
+    .immersive-tool-btn[data-align="right"] .tool-icon-align span {
+      justify-self: end;
+    }
+    .immersive-tool-btn[data-align="left"] .tool-icon-align span {
+      justify-self: start;
+    }
+    .tool-icon-box-a {
+      width: 27px;
+      height: 24px;
+      border: 2px solid #2c2927;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      line-height: 1;
     }
     .immersive-popover {
       justify-content: flex-start;
@@ -768,14 +834,14 @@
       padding: 8px 12px;
       border: 0;
       border-radius: 999px;
-      background: rgba(255,255,255,0.14);
-      color: #ffffff;
+      background: rgba(255,255,255,0.74);
+      color: #2c2927;
       font-size: 12px;
       box-shadow: none;
     }
     .font-pill.active,
     .style-pill.active {
-      background: rgba(255,255,255,0.94);
+      background: #f8d4c8;
       color: #171413;
     }
 
@@ -948,6 +1014,10 @@
   <div id="immersiveTextEditor" class="immersive-text-editor" aria-hidden="true">
     <button id="immersiveDoneBtn" class="immersive-done" type="button">完成</button>
     <div class="immersive-size-wrap">
+      <div id="immersiveSizeControl" class="immersive-size-control" role="slider" aria-label="字号" aria-valuemin="20" aria-valuemax="1000" aria-valuenow="150">
+        <div class="immersive-size-track"></div>
+        <div id="immersiveSizeKnob" class="immersive-size-knob"></div>
+      </div>
       <input id="immersiveSizeSlider" class="immersive-size-slider" type="range" min="20" max="1000" value="150" aria-label="字号" />
     </div>
     <textarea id="immersiveTextInput" class="immersive-input" rows="1" aria-label="直接编辑文字"></textarea>
@@ -956,10 +1026,10 @@
       <div id="immersiveFontPicker" class="immersive-popover"></div>
       <div id="immersiveStylePicker" class="immersive-popover"></div>
       <div class="immersive-tool-row">
-        <button id="immersiveColorBtn" class="immersive-tool-btn" type="button">颜色</button>
-        <button id="immersiveFontBtn" class="immersive-tool-btn" type="button">字体</button>
-        <button id="immersiveAlignBtn" class="immersive-tool-btn" type="button">居中</button>
-        <button id="immersiveStyleBtn" class="immersive-tool-btn" type="button">样式</button>
+        <button id="immersiveColorBtn" class="immersive-tool-btn" type="button" aria-label="颜色"><span class="tool-icon-palette" aria-hidden="true"></span></button>
+        <button id="immersiveFontBtn" class="immersive-tool-btn" type="button" aria-label="字体">Aa</button>
+        <button id="immersiveAlignBtn" class="immersive-tool-btn" type="button" aria-label="对齐"><span class="tool-icon-align" aria-hidden="true"><span></span><span></span><span></span></span></button>
+        <button id="immersiveStyleBtn" class="immersive-tool-btn" type="button" aria-label="文字样式"><span class="tool-icon-box-a" aria-hidden="true">A</span></button>
       </div>
     </div>
   </div>
@@ -1117,6 +1187,8 @@
     const immersiveTextEditor = document.getElementById('immersiveTextEditor');
     const immersiveDoneBtn = document.getElementById('immersiveDoneBtn');
     const immersiveTextInput = document.getElementById('immersiveTextInput');
+    const immersiveSizeControl = document.getElementById('immersiveSizeControl');
+    const immersiveSizeKnob = document.getElementById('immersiveSizeKnob');
     const immersiveSizeSlider = document.getElementById('immersiveSizeSlider');
     const immersiveTextToolbar = document.getElementById('immersiveTextToolbar');
     const immersiveColorBtn = document.getElementById('immersiveColorBtn');
@@ -1150,6 +1222,7 @@
     let overlayLayouts = [];
     let activeGuides = [];
     let snapState = { x: null, y: null, hapticKey: '' };
+    let suppressPlaceholderText = false;
 
     let previousFontValue = 'builtin-sourcehan-light';
     let exportBlobUrl = '';
@@ -1723,7 +1796,7 @@
       if (styleExamplesInput.scrollHeight > maxH) styleExamplesInput.style.overflowY = 'auto';
     }
 
-    function makeTextLayer(text, x, y, baseLayer = null) {
+    function makeTextLayer(text, x, y, baseLayer = null, options = {}) {
       const centerX = Math.max(0, Math.round(canvas.width / 2 - 13));
       const centerY = Math.max(0, Math.round(canvas.height / 2 - 28));
       return {
@@ -1736,7 +1809,8 @@
         fontOverride: baseLayer ? (baseLayer.fontOverride || null) : null,
         panelAlphaOverride: baseLayer && typeof baseLayer.panelAlphaOverride === 'number' ? baseLayer.panelAlphaOverride : null,
         textColorOverride: baseLayer ? (baseLayer.textColorOverride || null) : null,
-        align: baseLayer ? (baseLayer.align || 'left') : 'left'
+        align: baseLayer ? (baseLayer.align || 'left') : 'left',
+        isPlaceholder: !!options.isPlaceholder
       };
     }
 
@@ -1900,13 +1974,17 @@
 
       for (let i = 0; i < textLayers.length; i += 1) {
         const layer = textLayers[i];
+        if (layer.isPlaceholder && suppressPlaceholderText) {
+          textLayouts.push({ cx: layer.x + 13, cy: layer.y + 28, w: 26, h: 56, angle: layer.angle || 0 });
+          continue;
+        }
         if (typeof layer.angle !== 'number') layer.angle = 0;
         const effectiveStyleId = getEffectiveStyleId(layer);
         const effectiveFontId = getEffectiveFontId(layer);
         const layerStyle = getStyleConfig(effectiveStyleId);
         const fontStack = FONT_FAMILIES[effectiveFontId] || FONT_FAMILIES['builtin-sourcehan-light'];
         const panelAlpha = getEffectivePanelAlpha(layer);
-        const textColor = layer.textColorOverride || layerStyle.textColor;
+        const textColor = layer.isPlaceholder ? 'rgba(255,255,255,0.72)' : (layer.textColorOverride || layerStyle.textColor);
         const textAlignMode = ALIGN_MODES.includes(layer.align) ? layer.align : 'left';
         const baseFont = isMobileUI() ? FONT_UI.baseMobile : FONT_UI.baseDesktop;
         let fontSize = Math.max(FONT_UI.min, Math.min(FONT_UI.max, Math.round(baseFont * layer.scale)));
@@ -1923,7 +2001,7 @@
         for (let step = 0; step < 12; step += 1) {
           font = `${layerStyle.bodyWeight} ${fontSize}px ${fontStack}`;
           emojiFont = `400 ${fontSize}px ${EMOJI_FONT_STACK}`;
-          lines = wrapWithNewlines(layer.text, font, emojiFont, maxInnerWidth, layerStyle.letterSpacing, 12);
+          lines = wrapWithNewlines(layer.isPlaceholder ? '双击输入文字' : layer.text, font, emojiFont, maxInnerWidth, layerStyle.letterSpacing, 12);
           lineMetrics = lines.map(v => measureLineMetrics(v, font, emojiFont, layerStyle.letterSpacing));
           const lineW = Math.max(...lineMetrics.map(v => v.visualWidth), 0);
           if (lineW + padLeft + padRight <= canvas.width - 20) break;
@@ -2194,7 +2272,8 @@
         fontOverride: t.fontOverride || null,
         panelAlphaOverride: typeof t.panelAlphaOverride === 'number' ? t.panelAlphaOverride : null,
         textColorOverride: t.textColorOverride || null,
-        align: t.align || 'left'
+        align: t.align || 'left',
+        isPlaceholder: !!t.isPlaceholder
       }));
     }
 
@@ -2336,6 +2415,7 @@
         textLayers[i].panelAlphaOverride = typeof previous[i].panelAlphaOverride === 'number' ? previous[i].panelAlphaOverride : null;
         textLayers[i].textColorOverride = previous[i].textColorOverride || null;
         textLayers[i].align = previous[i].align || 'left';
+        textLayers[i].isPlaceholder = !!previous[i].isPlaceholder;
       }
       updateMultiToolbar();
     }
@@ -2574,8 +2654,16 @@
       document.documentElement.style.setProperty('--immersive-keyboard-offset', `${Math.round(offset)}px`);
     }
 
+    function focusImmersiveInput() {
+      try { immersiveTextInput.focus({ preventScroll: true }); } catch (_) { immersiveTextInput.focus(); }
+      window.requestAnimationFrame(() => {
+        try { immersiveTextInput.focus({ preventScroll: true }); } catch (_) { immersiveTextInput.focus(); }
+        if (immersiveTextInput.value) immersiveTextInput.select();
+      });
+    }
+
     function syncBodyInputFromTextLayers() {
-      bodyInput.value = textLayers.map(v => v.text).join('\n');
+      bodyInput.value = textLayers.filter(v => !v.isPlaceholder).map(v => v.text).join('\n');
       autoGrowBodyInput();
     }
 
@@ -2591,11 +2679,29 @@
       const next = Math.max(FONT_UI.min, Math.min(FONT_UI.max, Number(fontSize) || baseFont));
       layer.scale = Math.max(SCALE_UI.min, Math.min(SCALE_UI.max, next / baseFont));
       immersiveSizeSlider.value = String(Math.round(baseFont * layer.scale));
+      updateImmersiveSizeVisual();
       render();
     }
 
-    function createCenteredTextLayer(text = '输入文字') {
-      const layer = makeTextLayer(text);
+    function updateImmersiveSizeVisual() {
+      const value = Math.max(FONT_UI.min, Math.min(FONT_UI.max, Number(immersiveSizeSlider.value) || FONT_UI.baseMobile));
+      const ratio = (value - FONT_UI.min) / Math.max(1, FONT_UI.max - FONT_UI.min);
+      const pos = 1 - ratio;
+      immersiveSizeControl.style.setProperty('--immersive-size-pos', String(pos));
+      immersiveSizeControl.setAttribute('aria-valuenow', String(Math.round(value)));
+    }
+
+    function setSizeFromControlPoint(clientY) {
+      const rect = immersiveSizeControl.getBoundingClientRect();
+      const ratio = Math.max(0, Math.min(1, (clientY - rect.top) / Math.max(1, rect.height)));
+      const value = FONT_UI.max - ratio * (FONT_UI.max - FONT_UI.min);
+      immersiveSizeSlider.value = String(Math.round(value));
+      setCurrentTextFontSize(value);
+      immersiveDirty = true;
+    }
+
+    function createCenteredTextLayer(text = '双击输入文字', isPlaceholder = true) {
+      const layer = makeTextLayer(text, undefined, undefined, null, { isPlaceholder });
       textLayers.push(layer);
       selected = { kind: 'text', index: textLayers.length - 1 };
       multiSelected = [];
@@ -2608,17 +2714,18 @@
     function createTextLayerAfterCurrent() {
       if (immersiveEditIndex < 0 || !textLayers[immersiveEditIndex]) return;
       const current = textLayers[immersiveEditIndex];
-      current.text = immersiveTextInput.value.trim() || current.text || ' ';
+      const currentText = immersiveTextInput.value.trim();
+      current.text = currentText || '双击输入文字';
+      current.isPlaceholder = !currentText;
       render();
       const layout = textLayouts[immersiveEditIndex] || { h: getCurrentTextFontSize(current) * 1.2 };
       const nextY = Math.max(0, Math.min(canvas.height - 56, current.y + layout.h + 14));
-      const next = makeTextLayer('输入文字', current.x, nextY, current);
+      const next = makeTextLayer('双击输入文字', current.x, nextY, current, { isPlaceholder: true });
       textLayers.splice(immersiveEditIndex + 1, 0, next);
       immersiveEditIndex += 1;
       selected = { kind: 'text', index: immersiveEditIndex };
       immersiveCreatedCount = 0;
-      immersiveTextInput.value = next.text;
-      immersiveTextInput.select();
+      immersiveTextInput.value = '';
       syncBodyInputFromTextLayers();
       syncControlsFromSelectedText();
       updateImmersiveControls({ keepInput: true });
@@ -2634,7 +2741,8 @@
       const base = textLayers[immersiveEditIndex];
       const baseY = base.y;
       textLayers.splice(immersiveEditIndex + 1, immersiveCreatedCount);
-      base.text = safeLines[0];
+      base.text = safeLines[0] || '双击输入文字';
+      base.isPlaceholder = !safeLines[0];
       immersiveCreatedCount = 0;
       render();
       const baseLayout = textLayouts[immersiveEditIndex] || { h: getCurrentTextFontSize(base) * 1.2 };
@@ -2667,10 +2775,12 @@
     function updateImmersiveControls(options = {}) {
       const layer = getSelectedTextLayer();
       if (!layer) return;
-      if (!options.keepInput) immersiveTextInput.value = layer.text || '';
+      if (!options.keepInput) immersiveTextInput.value = layer.isPlaceholder ? '' : (layer.text || '');
       immersiveSizeSlider.value = String(Math.max(FONT_UI.min, Math.min(FONT_UI.max, getCurrentTextFontSize(layer))));
+      updateImmersiveSizeVisual();
       const align = layer.align || 'left';
-      immersiveAlignBtn.textContent = align === 'left' ? '左对齐' : (align === 'right' ? '右对齐' : '居中');
+      immersiveAlignBtn.dataset.align = align;
+      immersiveAlignBtn.setAttribute('aria-label', align === 'left' ? '左对齐' : (align === 'right' ? '右对齐' : '居中'));
       const effectiveFont = getEffectiveFontId(layer);
       const effectiveStyle = getEffectiveStyleId(layer);
       immersiveFontPicker.querySelectorAll('button').forEach((btn) => btn.classList.toggle('active', btn.dataset.fontId === effectiveFont));
@@ -2691,6 +2801,7 @@
           layer.textColorOverride = color;
           immersiveDirty = true;
           render();
+          focusImmersiveInput();
         });
         immersiveColorPicker.appendChild(btn);
       }
@@ -2714,6 +2825,7 @@
           syncControlsFromSelectedText();
           updateImmersiveControls();
           render();
+          focusImmersiveInput();
         });
         immersiveFontPicker.appendChild(btn);
       });
@@ -2734,6 +2846,7 @@
           syncControlsFromSelectedText();
           updateImmersiveControls();
           render();
+          focusImmersiveInput();
         });
         immersiveStylePicker.appendChild(btn);
       });
@@ -2747,7 +2860,7 @@
       closeSheets();
       pushHistory();
       let targetIndex = Number.isInteger(index) ? index : (selected && selected.kind === 'text' ? selected.index : -1);
-      if (targetIndex < 0 || !textLayers[targetIndex]) targetIndex = createCenteredTextLayer('输入文字');
+      if (targetIndex < 0 || !textLayers[targetIndex]) targetIndex = createCenteredTextLayer('双击输入文字', true);
       selected = { kind: 'text', index: targetIndex };
       multiSelected = [];
       immersiveEditIndex = targetIndex;
@@ -2761,10 +2874,7 @@
       document.body.classList.add('immersive-text-mode');
       setKeyboardOffset();
       render();
-      window.setTimeout(() => {
-        immersiveTextInput.focus({ preventScroll: true });
-        immersiveTextInput.select();
-      }, 60);
+      focusImmersiveInput();
     }
 
     function exitImmersiveTextEdit() {
@@ -2852,6 +2962,24 @@
       setCurrentTextFontSize(immersiveSizeSlider.value);
       immersiveDirty = true;
     });
+    immersiveSizeControl.addEventListener('pointerdown', (e) => {
+      setSizeFromControlPoint(e.clientY);
+      try { immersiveSizeControl.setPointerCapture(e.pointerId); } catch (_) {}
+      e.preventDefault();
+    });
+    immersiveSizeControl.addEventListener('pointermove', (e) => {
+      if (!immersiveSizeControl.hasPointerCapture || !immersiveSizeControl.hasPointerCapture(e.pointerId)) return;
+      setSizeFromControlPoint(e.clientY);
+      e.preventDefault();
+    });
+    immersiveSizeControl.addEventListener('pointerup', (e) => {
+      try { immersiveSizeControl.releasePointerCapture(e.pointerId); } catch (_) {}
+      if (immersiveDirty) pushHistory();
+      e.preventDefault();
+    });
+    immersiveSizeControl.addEventListener('pointercancel', (e) => {
+      try { immersiveSizeControl.releasePointerCapture(e.pointerId); } catch (_) {}
+    });
     immersiveColorBtn.addEventListener('click', () => toggleImmersivePopover(immersiveColorPicker, immersiveColorBtn));
     immersiveFontBtn.addEventListener('click', () => toggleImmersivePopover(immersiveFontPicker, immersiveFontBtn));
     immersiveStyleBtn.addEventListener('click', () => toggleImmersivePopover(immersiveStylePicker, immersiveStyleBtn));
@@ -2863,6 +2991,7 @@
       immersiveDirty = true;
       updateImmersiveControls();
       render();
+      focusImmersiveInput();
     });
     if (window.visualViewport) {
       window.visualViewport.addEventListener('resize', setKeyboardOffset);
@@ -3053,13 +3182,29 @@
     }
 
     async function openExportPreview() {
+      const savedSelected = selected ? { ...selected } : null;
+      const savedMulti = multiSelected.slice();
+      const savedGuides = activeGuides.slice();
+      suppressPlaceholderText = true;
+      selected = null;
+      multiSelected = [];
+      activeGuides = [];
       render();
-      const blob = await new Promise((resolve, reject) => {
-        canvas.toBlob((b) => {
-          if (b) resolve(b);
-          else reject(new Error('导出图片失败'));
-        }, 'image/jpeg', 0.95);
-      });
+      let blob = null;
+      try {
+        blob = await new Promise((resolve, reject) => {
+          canvas.toBlob((b) => {
+            if (b) resolve(b);
+            else reject(new Error('导出图片失败'));
+          }, 'image/jpeg', 0.95);
+        });
+      } finally {
+        suppressPlaceholderText = false;
+        selected = savedSelected;
+        multiSelected = savedMulti;
+        activeGuides = savedGuides;
+        render();
+      }
       if (exportBlobUrl) URL.revokeObjectURL(exportBlobUrl);
       exportBlobUrl = URL.createObjectURL(blob);
       exportPreviewImage.src = exportBlobUrl;
@@ -3400,7 +3545,6 @@
           lastTextTapAt = now;
           lastTextTapIndex = pressItem.index;
           if (isDoubleTap) enterImmersiveTextEdit(pressItem.index);
-          else openSheet('text');
         }
       }
       updateMultiToolbar();
