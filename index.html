@@ -606,6 +606,179 @@
       display: block;
     }
 
+    body.immersive-text-mode {
+      overflow: hidden;
+      touch-action: none;
+    }
+
+    body.immersive-text-mode .bottom-toolbar,
+    body.immersive-text-mode .bottom-sheet,
+    body.immersive-text-mode .sheet-backdrop,
+    body.immersive-text-mode .canvas-counter {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    body.immersive-text-mode .wrap {
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+
+    .immersive-text-editor {
+      position: fixed;
+      inset: 0;
+      z-index: 60;
+      display: none;
+      pointer-events: none;
+      background: linear-gradient(180deg, rgba(0,0,0,0.12), rgba(0,0,0,0.02) 26%, rgba(0,0,0,0.22));
+    }
+    .immersive-text-editor.show {
+      display: block;
+    }
+    .immersive-done {
+      position: fixed;
+      top: calc(env(safe-area-inset-top) + 12px);
+      right: 14px;
+      z-index: 64;
+      width: auto;
+      padding: 10px 16px;
+      border: 0;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.92);
+      color: #171413;
+      font-size: 15px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.16);
+      pointer-events: auto;
+    }
+    .immersive-input {
+      position: fixed;
+      left: 50%;
+      bottom: calc(var(--immersive-keyboard-offset, 0px) + env(safe-area-inset-bottom) + 74px);
+      z-index: 62;
+      width: min(78vw, 560px);
+      min-height: 42px;
+      max-height: 28svh;
+      transform: translateX(-50%);
+      opacity: 0.02;
+      color: transparent;
+      caret-color: #ffffff;
+      background: transparent;
+      border: 0;
+      outline: 0;
+      resize: none;
+      pointer-events: auto;
+      line-height: 1.35;
+    }
+    .immersive-size-wrap {
+      position: fixed;
+      left: max(12px, env(safe-area-inset-left));
+      top: 22svh;
+      bottom: calc(var(--immersive-keyboard-offset, 0px) + 132px + env(safe-area-inset-bottom));
+      z-index: 63;
+      width: 42px;
+      min-height: 180px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: auto;
+    }
+    .immersive-size-slider {
+      width: min(52svh, 360px);
+      height: 42px;
+      transform: rotate(-90deg);
+      transform-origin: center;
+      touch-action: none;
+    }
+    .immersive-size-slider::-webkit-slider-runnable-track {
+      height: 8px;
+      background: rgba(255,255,255,0.62);
+      border: 1px solid rgba(0,0,0,0.16);
+    }
+    .immersive-size-slider::-webkit-slider-thumb {
+      width: 24px;
+      height: 24px;
+      margin-top: -9px;
+      border-color: #ffffff;
+      background: #111111;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.22);
+    }
+    .immersive-toolbar {
+      position: fixed;
+      left: 50%;
+      bottom: calc(var(--immersive-keyboard-offset, 0px) + env(safe-area-inset-bottom) + 12px);
+      z-index: 63;
+      width: min(94vw, 640px);
+      transform: translateX(-50%);
+      display: grid;
+      gap: 8px;
+      pointer-events: auto;
+    }
+    .immersive-tool-row,
+    .immersive-popover {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 8px;
+      border-radius: 999px;
+      background: rgba(18, 16, 15, 0.74);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.18);
+    }
+    .immersive-tool-btn {
+      width: auto;
+      min-width: 56px;
+      padding: 9px 12px;
+      border: 0;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.12);
+      color: #ffffff;
+      font-size: 13px;
+      box-shadow: none;
+    }
+    .immersive-tool-btn.active {
+      background: rgba(255,255,255,0.92);
+      color: #171413;
+    }
+    .immersive-popover {
+      justify-content: flex-start;
+      overflow-x: auto;
+      display: none;
+      scrollbar-width: none;
+    }
+    .immersive-popover.show {
+      display: flex;
+    }
+    .immersive-popover::-webkit-scrollbar {
+      display: none;
+    }
+    .color-swatch {
+      width: 32px;
+      height: 32px;
+      flex: 0 0 auto;
+      border-radius: 50%;
+      border: 2px solid rgba(255,255,255,0.92);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+      padding: 0;
+    }
+    .font-pill,
+    .style-pill {
+      flex: 0 0 auto;
+      width: auto;
+      padding: 8px 12px;
+      border: 0;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.14);
+      color: #ffffff;
+      font-size: 12px;
+      box-shadow: none;
+    }
+    .font-pill.active,
+    .style-pill.active {
+      background: rgba(255,255,255,0.94);
+      color: #171413;
+    }
+
     @media (max-width: 760px) {
       .wrap {
         padding: calc(env(safe-area-inset-top) + 6px) 1px calc(var(--toolbar-h) + env(safe-area-inset-bottom) + 12px);
@@ -771,6 +944,26 @@
     <button id="alignCenterBtn" class="mini-btn" type="button">水平居中</button>
     <button id="alignRightBtn" class="mini-btn" type="button">右对齐</button>
   </div>
+
+  <div id="immersiveTextEditor" class="immersive-text-editor" aria-hidden="true">
+    <button id="immersiveDoneBtn" class="immersive-done" type="button">完成</button>
+    <div class="immersive-size-wrap">
+      <input id="immersiveSizeSlider" class="immersive-size-slider" type="range" min="20" max="1000" value="150" aria-label="字号" />
+    </div>
+    <textarea id="immersiveTextInput" class="immersive-input" rows="1" aria-label="直接编辑文字"></textarea>
+    <div id="immersiveTextToolbar" class="immersive-toolbar">
+      <div id="immersiveColorPicker" class="immersive-popover"></div>
+      <div id="immersiveFontPicker" class="immersive-popover"></div>
+      <div id="immersiveStylePicker" class="immersive-popover"></div>
+      <div class="immersive-tool-row">
+        <button id="immersiveColorBtn" class="immersive-tool-btn" type="button">颜色</button>
+        <button id="immersiveFontBtn" class="immersive-tool-btn" type="button">字体</button>
+        <button id="immersiveAlignBtn" class="immersive-tool-btn" type="button">居中</button>
+        <button id="immersiveStyleBtn" class="immersive-tool-btn" type="button">样式</button>
+      </div>
+    </div>
+  </div>
+
   <div id="exportModal" class="export-modal">
     <div class="export-card">
       <img id="exportPreviewImage" class="export-img" alt="导出预览图" />
@@ -921,6 +1114,18 @@
     const exportPreviewImage = document.getElementById('exportPreviewImage');
     const shareSaveBtn = document.getElementById('shareSaveBtn');
     const closeExportModalBtn = document.getElementById('closeExportModalBtn');
+    const immersiveTextEditor = document.getElementById('immersiveTextEditor');
+    const immersiveDoneBtn = document.getElementById('immersiveDoneBtn');
+    const immersiveTextInput = document.getElementById('immersiveTextInput');
+    const immersiveSizeSlider = document.getElementById('immersiveSizeSlider');
+    const immersiveTextToolbar = document.getElementById('immersiveTextToolbar');
+    const immersiveColorBtn = document.getElementById('immersiveColorBtn');
+    const immersiveFontBtn = document.getElementById('immersiveFontBtn');
+    const immersiveAlignBtn = document.getElementById('immersiveAlignBtn');
+    const immersiveStyleBtn = document.getElementById('immersiveStyleBtn');
+    const immersiveColorPicker = document.getElementById('immersiveColorPicker');
+    const immersiveFontPicker = document.getElementById('immersiveFontPicker');
+    const immersiveStylePicker = document.getElementById('immersiveStylePicker');
 
     let baseImage = null;
     let baseImageSrc = '';
@@ -944,6 +1149,7 @@
     let textLayouts = [];
     let overlayLayouts = [];
     let activeGuides = [];
+    let snapState = { x: null, y: null, hapticKey: '' };
 
     let previousFontValue = 'builtin-sourcehan-light';
     let exportBlobUrl = '';
@@ -953,8 +1159,15 @@
     let longPressTriggered = false;
     const LONG_PRESS_MS = 380;
     const TAP_MOVE_TOLERANCE = 6;
+    const IMMERSIVE_COLORS = ['#ffffff', '#000000', '#ff5d9d', '#ffdd68', '#7fdcff', '#8fda8f', '#ff8f66', '#c9a7ff'];
+    const ALIGN_MODES = ['left', 'center', 'right'];
 
     let isApplyingHistory = false;
+    let immersiveEditIndex = -1;
+    let immersiveCreatedCount = 0;
+    let immersiveDirty = false;
+    let lastTextTapAt = 0;
+    let lastTextTapIndex = -1;
     const historyStack = [];
     const redoStack = [];
     const globalStyle = {
@@ -1510,6 +1723,23 @@
       if (styleExamplesInput.scrollHeight > maxH) styleExamplesInput.style.overflowY = 'auto';
     }
 
+    function makeTextLayer(text, x, y, baseLayer = null) {
+      const centerX = Math.max(0, Math.round(canvas.width / 2 - 13));
+      const centerY = Math.max(0, Math.round(canvas.height / 2 - 28));
+      return {
+        text,
+        x: Math.max(0, Math.min(canvas.width - 26, typeof x === 'number' ? x : centerX)),
+        y: Math.max(0, Math.min(canvas.height - 56, typeof y === 'number' ? y : centerY)),
+        scale: baseLayer && typeof baseLayer.scale === 'number' ? baseLayer.scale : 1,
+        angle: baseLayer && typeof baseLayer.angle === 'number' ? baseLayer.angle : 0,
+        styleOverride: baseLayer ? (baseLayer.styleOverride || null) : null,
+        fontOverride: baseLayer ? (baseLayer.fontOverride || null) : null,
+        panelAlphaOverride: baseLayer && typeof baseLayer.panelAlphaOverride === 'number' ? baseLayer.panelAlphaOverride : null,
+        textColorOverride: baseLayer ? (baseLayer.textColorOverride || null) : null,
+        align: baseLayer ? (baseLayer.align || 'left') : 'left'
+      };
+    }
+
     function syncTextLayers(lines) {
       const next = [];
       for (let i = 0; i < lines.length; i += 1) {
@@ -1517,18 +1747,7 @@
         if (prev) {
           next.push({ ...prev, text: lines[i] });
         } else {
-          const centerX = Math.max(0, Math.round(canvas.width / 2 - 13));
-          const centerY = Math.max(0, Math.round(canvas.height / 2 - 28));
-          next.push({
-            text: lines[i],
-            x: Math.max(0, Math.min(canvas.width - 26, centerX)),
-            y: Math.max(0, Math.min(canvas.height - 56, centerY)),
-            scale: 1,
-            angle: 0,
-            styleOverride: null,
-            fontOverride: null,
-            panelAlphaOverride: null
-          });
+          next.push(makeTextLayer(lines[i]));
         }
       }
       textLayers = next;
@@ -1687,6 +1906,8 @@
         const layerStyle = getStyleConfig(effectiveStyleId);
         const fontStack = FONT_FAMILIES[effectiveFontId] || FONT_FAMILIES['builtin-sourcehan-light'];
         const panelAlpha = getEffectivePanelAlpha(layer);
+        const textColor = layer.textColorOverride || layerStyle.textColor;
+        const textAlignMode = ALIGN_MODES.includes(layer.align) ? layer.align : 'left';
         const baseFont = isMobileUI() ? FONT_UI.baseMobile : FONT_UI.baseDesktop;
         let fontSize = Math.max(FONT_UI.min, Math.min(FONT_UI.max, Math.round(baseFont * layer.scale)));
         let font = '';
@@ -1727,13 +1948,17 @@
           const boxRight = layerStyle.usePanel ? (visualRight + padRight) : visualRight;
           const boxTop = layerStyle.usePanel ? (textTop - padTop) : textTop;
           const boxBottom = layerStyle.usePanel ? (textBottom + padBottom) : textBottom;
+          const bgW = Math.max(2, boxRight - boxLeft);
+          let textStartX = padLeft;
+          if (textAlignMode === 'center') textStartX = boxLeft + (bgW - m.visualWidth) / 2 - m.minLeft;
+          if (textAlignMode === 'right') textStartX = boxRight - padRight - m.maxRight;
           lineRects.push({
             text: lines[li],
             baselineY,
-            textStartX: padLeft,
+            textStartX,
             bgX: boxLeft,
             bgY: boxTop,
-            bgW: Math.max(2, boxRight - boxLeft),
+            bgW,
             bgH: Math.max(2, boxBottom - boxTop)
           });
           minX = Math.min(minX, boxLeft);
@@ -1760,7 +1985,7 @@
         ctx.translate(cx, cy);
         ctx.rotate(layer.angle);
 
-        ctx.fillStyle = layerStyle.textColor;
+        ctx.fillStyle = textColor;
         ctx.shadowBlur = layerStyle.textShadowBlur || 0;
         for (let li = 0; li < lineRects.length; li += 1) {
           const ln = lineRects[li];
@@ -1770,7 +1995,7 @@
             ctx.fillStyle = `rgba(${layerStyle.panel.rgb},${panelAlpha})`;
             ctx.fillRect(drawLeft + ln.bgX, drawTop + ln.bgY, ln.bgW, ln.bgH);
           }
-          ctx.fillStyle = layerStyle.textColor;
+          ctx.fillStyle = textColor;
           drawTextWithSpacing(ln.text, drawLeft + ln.textStartX, drawTop + ln.baselineY, font, layerStyle.letterSpacing, emojiFont);
         }
 
@@ -1967,7 +2192,9 @@
         angle: t.angle || 0,
         styleOverride: t.styleOverride || null,
         fontOverride: t.fontOverride || null,
-        panelAlphaOverride: typeof t.panelAlphaOverride === 'number' ? t.panelAlphaOverride : null
+        panelAlphaOverride: typeof t.panelAlphaOverride === 'number' ? t.panelAlphaOverride : null,
+        textColorOverride: t.textColorOverride || null,
+        align: t.align || 'left'
       }));
     }
 
@@ -2107,6 +2334,8 @@
         textLayers[i].styleOverride = previous[i].styleOverride || null;
         textLayers[i].fontOverride = previous[i].fontOverride || null;
         textLayers[i].panelAlphaOverride = typeof previous[i].panelAlphaOverride === 'number' ? previous[i].panelAlphaOverride : null;
+        textLayers[i].textColorOverride = previous[i].textColorOverride || null;
+        textLayers[i].align = previous[i].align || 'left';
       }
       updateMultiToolbar();
     }
@@ -2231,8 +2460,57 @@
       return { y: snappedTop, guides };
     }
 
+    function triggerSnapHaptic(key) {
+      if (snapState.hapticKey === key) return;
+      snapState.hapticKey = key;
+      try {
+        if (navigator.vibrate) navigator.vibrate(8);
+      } catch (_) {}
+    }
+
+    function resetSnapState() {
+      snapState = { x: null, y: null, hapticKey: '' };
+    }
+
+    function snapAxis(axis, candidates, anchors, moving, currentPos) {
+      const enterThreshold = isMobileUI() ? 12 : 8;
+      const releaseThreshold = isMobileUI() ? 22 : 16;
+      let best = null;
+      for (const anchor of anchors) {
+        const anchorV = moving[anchor];
+        for (const t of candidates) {
+          const d = t.value - anchorV;
+          const ad = Math.abs(d);
+          if (ad <= releaseThreshold && (!best || ad < best.delta)) {
+            best = { delta: ad, move: d, guideValue: t.value, anchor, key: `${axis}:${anchor}:${t.key}:${Math.round(t.value)}` };
+          }
+        }
+      }
+
+      const locked = snapState[axis];
+      if (locked) {
+        const lockAnchor = moving[locked.anchor];
+        const d = locked.value - lockAnchor;
+        if (Math.abs(d) <= releaseThreshold) {
+          triggerSnapHaptic(locked.key);
+          return { pos: currentPos + d, guideValue: locked.value, locked: true };
+        }
+        snapState[axis] = null;
+      }
+
+      if (!best) return { pos: currentPos, guideValue: null, locked: false };
+
+      if (best.delta <= enterThreshold) {
+        snapState[axis] = { value: best.guideValue, anchor: best.anchor, key: best.key };
+        triggerSnapHaptic(best.key);
+        return { pos: currentPos + best.move, guideValue: best.guideValue, locked: true };
+      }
+
+      // Outside the snap circle but near it: add light resistance instead of a hard jump.
+      return { pos: currentPos + best.move * 0.38, guideValue: best.guideValue, locked: false };
+    }
+
     function snapMoveWithGuides(kind, index, nextX, nextY, w, h) {
-      const threshold = 8;
       const moving = {
         left: nextX,
         right: nextX + w,
@@ -2256,54 +2534,23 @@
         yCandidates.push({ key: 'cy', value: o.cy });
       }
 
-      const mapX = {
-        left: () => moving.left,
-        right: () => moving.right,
-        cx: () => moving.cx
-      };
-      const mapY = {
-        top: () => moving.top,
-        bottom: () => moving.bottom,
-        cy: () => moving.cy
-      };
+      const snappedX = snapAxis('x', xCandidates, ['left', 'right', 'cx'], moving, nextX);
+      const moveX = snappedX.pos - nextX;
+      nextX = snappedX.pos;
+      moving.left += moveX;
+      moving.right += moveX;
+      moving.cx += moveX;
 
-      let bestX = null;
-      for (const anchor of ['left', 'right', 'cx']) {
-        const anchorV = mapX[anchor]();
-        for (const t of xCandidates) {
-          const d = t.value - anchorV;
-          const ad = Math.abs(d);
-          if (ad <= threshold && (!bestX || ad < bestX.delta)) bestX = { delta: ad, move: d, guideX: t.value };
-        }
-      }
-
-      if (bestX) {
-        nextX += bestX.move;
-        moving.left += bestX.move;
-        moving.right += bestX.move;
-        moving.cx += bestX.move;
-      }
-
-      let bestY = null;
-      for (const anchor of ['top', 'bottom', 'cy']) {
-        const anchorV = mapY[anchor]();
-        for (const t of yCandidates) {
-          const d = t.value - anchorV;
-          const ad = Math.abs(d);
-          if (ad <= threshold && (!bestY || ad < bestY.delta)) bestY = { delta: ad, move: d, guideY: t.value };
-        }
-      }
-
-      if (bestY) {
-        nextY += bestY.move;
-        moving.top += bestY.move;
-        moving.bottom += bestY.move;
-        moving.cy += bestY.move;
-      }
+      const snappedY = snapAxis('y', yCandidates, ['top', 'bottom', 'cy'], moving, nextY);
+      const moveY = snappedY.pos - nextY;
+      nextY = snappedY.pos;
+      moving.top += moveY;
+      moving.bottom += moveY;
+      moving.cy += moveY;
 
       const guides = [];
-      if (bestX) guides.push({ x1: bestX.guideX, y1: 0, x2: bestX.guideX, y2: canvas.height });
-      if (bestY) guides.push({ x1: 0, y1: bestY.guideY, x2: canvas.width, y2: bestY.guideY });
+      if (snappedX.guideValue !== null) guides.push({ x1: snappedX.guideValue, y1: 0, x2: snappedX.guideValue, y2: canvas.height });
+      if (snappedY.guideValue !== null) guides.push({ x1: 0, y1: snappedY.guideValue, x2: canvas.width, y2: snappedY.guideValue });
 
       if (kind === 'text') {
         const spacing = getEqualSpacingSnapForText(index, nextX, nextY, w, h);
@@ -2313,8 +2560,235 @@
         }
       }
       activeGuides = guides;
+      if (!guides.length) snapState.hapticKey = '';
 
       return { x: nextX, y: nextY };
+    }
+
+    function setKeyboardOffset() {
+      if (!window.visualViewport) {
+        document.documentElement.style.setProperty('--immersive-keyboard-offset', '0px');
+        return;
+      }
+      const offset = Math.max(0, window.innerHeight - window.visualViewport.height - window.visualViewport.offsetTop);
+      document.documentElement.style.setProperty('--immersive-keyboard-offset', `${Math.round(offset)}px`);
+    }
+
+    function syncBodyInputFromTextLayers() {
+      bodyInput.value = textLayers.map(v => v.text).join('\n');
+      autoGrowBodyInput();
+    }
+
+    function getCurrentTextFontSize(layer) {
+      const baseFont = isMobileUI() ? FONT_UI.baseMobile : FONT_UI.baseDesktop;
+      return Math.round(baseFont * ((layer && layer.scale) || 1));
+    }
+
+    function setCurrentTextFontSize(fontSize) {
+      const layer = getSelectedTextLayer();
+      if (!layer) return;
+      const baseFont = isMobileUI() ? FONT_UI.baseMobile : FONT_UI.baseDesktop;
+      const next = Math.max(FONT_UI.min, Math.min(FONT_UI.max, Number(fontSize) || baseFont));
+      layer.scale = Math.max(SCALE_UI.min, Math.min(SCALE_UI.max, next / baseFont));
+      immersiveSizeSlider.value = String(Math.round(baseFont * layer.scale));
+      render();
+    }
+
+    function createCenteredTextLayer(text = '输入文字') {
+      const layer = makeTextLayer(text);
+      textLayers.push(layer);
+      selected = { kind: 'text', index: textLayers.length - 1 };
+      multiSelected = [];
+      syncBodyInputFromTextLayers();
+      render();
+      syncControlsFromSelectedText();
+      return selected.index;
+    }
+
+    function createTextLayerAfterCurrent() {
+      if (immersiveEditIndex < 0 || !textLayers[immersiveEditIndex]) return;
+      const current = textLayers[immersiveEditIndex];
+      current.text = immersiveTextInput.value.trim() || current.text || ' ';
+      render();
+      const layout = textLayouts[immersiveEditIndex] || { h: getCurrentTextFontSize(current) * 1.2 };
+      const nextY = Math.max(0, Math.min(canvas.height - 56, current.y + layout.h + 14));
+      const next = makeTextLayer('输入文字', current.x, nextY, current);
+      textLayers.splice(immersiveEditIndex + 1, 0, next);
+      immersiveEditIndex += 1;
+      selected = { kind: 'text', index: immersiveEditIndex };
+      immersiveCreatedCount = 0;
+      immersiveTextInput.value = next.text;
+      immersiveTextInput.select();
+      syncBodyInputFromTextLayers();
+      syncControlsFromSelectedText();
+      updateImmersiveControls({ keepInput: true });
+      immersiveDirty = true;
+      render();
+    }
+
+    function applyTextLinesFromImmersiveInput() {
+      if (immersiveEditIndex < 0 || !textLayers[immersiveEditIndex]) return;
+      const rawLines = immersiveTextInput.value.split('\n');
+      const lines = rawLines.map(v => v.trim()).filter(Boolean);
+      const safeLines = lines.length ? lines : [''];
+      const base = textLayers[immersiveEditIndex];
+      const baseY = base.y;
+      textLayers.splice(immersiveEditIndex + 1, immersiveCreatedCount);
+      base.text = safeLines[0];
+      immersiveCreatedCount = 0;
+      render();
+      const baseLayout = textLayouts[immersiveEditIndex] || { h: getCurrentTextFontSize(base) * 1.2 };
+      let nextY = baseY + baseLayout.h + 14;
+      for (let i = 1; i < safeLines.length; i += 1) {
+        const clone = makeTextLayer(safeLines[i], base.x, nextY, base);
+        textLayers.splice(immersiveEditIndex + i, 0, clone);
+        immersiveCreatedCount += 1;
+        nextY += Math.max(36, baseLayout.h + 14);
+      }
+      selected = { kind: 'text', index: immersiveEditIndex + safeLines.length - 1 };
+      if (safeLines.length > 1) {
+        immersiveEditIndex = selected.index;
+        immersiveCreatedCount = 0;
+      }
+      syncBodyInputFromTextLayers();
+      syncControlsFromSelectedText();
+      updateImmersiveControls();
+      render();
+      immersiveDirty = true;
+    }
+
+    function hideImmersivePopovers(except = null) {
+      [immersiveColorPicker, immersiveFontPicker, immersiveStylePicker].forEach((el) => {
+        if (el !== except) el.classList.remove('show');
+      });
+      [immersiveColorBtn, immersiveFontBtn, immersiveStyleBtn].forEach((btn) => btn.classList.remove('active'));
+    }
+
+    function updateImmersiveControls(options = {}) {
+      const layer = getSelectedTextLayer();
+      if (!layer) return;
+      if (!options.keepInput) immersiveTextInput.value = layer.text || '';
+      immersiveSizeSlider.value = String(Math.max(FONT_UI.min, Math.min(FONT_UI.max, getCurrentTextFontSize(layer))));
+      const align = layer.align || 'left';
+      immersiveAlignBtn.textContent = align === 'left' ? '左对齐' : (align === 'right' ? '右对齐' : '居中');
+      const effectiveFont = getEffectiveFontId(layer);
+      const effectiveStyle = getEffectiveStyleId(layer);
+      immersiveFontPicker.querySelectorAll('button').forEach((btn) => btn.classList.toggle('active', btn.dataset.fontId === effectiveFont));
+      immersiveStylePicker.querySelectorAll('button').forEach((btn) => btn.classList.toggle('active', btn.dataset.styleId === effectiveStyle));
+    }
+
+    function buildImmersivePickers() {
+      immersiveColorPicker.innerHTML = '';
+      for (const color of IMMERSIVE_COLORS) {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'color-swatch';
+        btn.style.background = color;
+        btn.setAttribute('aria-label', color);
+        btn.addEventListener('click', () => {
+          const layer = getSelectedTextLayer();
+          if (!layer) return;
+          layer.textColorOverride = color;
+          immersiveDirty = true;
+          render();
+        });
+        immersiveColorPicker.appendChild(btn);
+      }
+
+      immersiveFontPicker.innerHTML = '';
+      Array.from(fontSelect.options).forEach((opt) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'font-pill';
+        btn.dataset.fontId = opt.value;
+        btn.textContent = opt.textContent;
+        btn.addEventListener('click', async () => {
+          const layer = getSelectedTextLayer();
+          if (!layer) return;
+          layer.fontOverride = opt.value;
+          fontSelect.value = opt.value;
+          previousFontValue = opt.value;
+          rememberSelectedFont(opt.value);
+          await ensureFontReady(opt.value);
+          immersiveDirty = true;
+          syncControlsFromSelectedText();
+          updateImmersiveControls();
+          render();
+        });
+        immersiveFontPicker.appendChild(btn);
+      });
+
+      immersiveStylePicker.innerHTML = '';
+      Array.from(styleSelect.options).forEach((opt) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'style-pill';
+        btn.dataset.styleId = opt.value;
+        btn.textContent = opt.textContent;
+        btn.addEventListener('click', () => {
+          const layer = getSelectedTextLayer();
+          if (!layer) return;
+          layer.styleOverride = opt.value;
+          styleSelect.value = opt.value;
+          immersiveDirty = true;
+          syncControlsFromSelectedText();
+          updateImmersiveControls();
+          render();
+        });
+        immersiveStylePicker.appendChild(btn);
+      });
+    }
+
+    function enterImmersiveTextEdit(index = null) {
+      if (!baseImage) {
+        imageInput.click();
+        return;
+      }
+      closeSheets();
+      pushHistory();
+      let targetIndex = Number.isInteger(index) ? index : (selected && selected.kind === 'text' ? selected.index : -1);
+      if (targetIndex < 0 || !textLayers[targetIndex]) targetIndex = createCenteredTextLayer('输入文字');
+      selected = { kind: 'text', index: targetIndex };
+      multiSelected = [];
+      immersiveEditIndex = targetIndex;
+      immersiveCreatedCount = 0;
+      immersiveDirty = false;
+      syncControlsFromSelectedText();
+      buildImmersivePickers();
+      updateImmersiveControls();
+      immersiveTextEditor.classList.add('show');
+      immersiveTextEditor.setAttribute('aria-hidden', 'false');
+      document.body.classList.add('immersive-text-mode');
+      setKeyboardOffset();
+      render();
+      window.setTimeout(() => {
+        immersiveTextInput.focus({ preventScroll: true });
+        immersiveTextInput.select();
+      }, 60);
+    }
+
+    function exitImmersiveTextEdit() {
+      if (!immersiveTextEditor.classList.contains('show')) return;
+      immersiveTextInput.blur();
+      hideImmersivePopovers();
+      immersiveTextEditor.classList.remove('show');
+      immersiveTextEditor.setAttribute('aria-hidden', 'true');
+      document.body.classList.remove('immersive-text-mode');
+      document.documentElement.style.setProperty('--immersive-keyboard-offset', '0px');
+      syncBodyInputFromTextLayers();
+      render();
+      updateMultiToolbar();
+      if (immersiveDirty) pushHistory();
+      immersiveEditIndex = -1;
+      immersiveCreatedCount = 0;
+      immersiveDirty = false;
+    }
+
+    function toggleImmersivePopover(popover, button) {
+      const willShow = !popover.classList.contains('show');
+      hideImmersivePopovers(willShow ? popover : null);
+      popover.classList.toggle('show', willShow);
+      button.classList.toggle('active', willShow);
     }
 
     imageInput.addEventListener('change', async (e) => {
@@ -2347,7 +2821,7 @@
     addMainImageBtn.addEventListener('click', () => imageInput.click());
     replaceMainImageBtn.addEventListener('click', () => imageInput.click());
     imageToolBtn.addEventListener('click', () => openSheet('image'));
-    textToolBtn.addEventListener('click', () => openSheet('text'));
+    textToolBtn.addEventListener('click', () => enterImmersiveTextEdit());
     aiToolBtn.addEventListener('click', () => openSheet('ai'));
     sheetBackdrop.addEventListener('click', closeSheets);
     document.querySelectorAll('[data-close-sheet]').forEach((btn) => {
@@ -2362,6 +2836,38 @@
         if (endY - sheetTouchStartY > 56) closeSheets();
       }, { passive: true });
     });
+
+    immersiveDoneBtn.addEventListener('click', exitImmersiveTextEdit);
+    immersiveTextInput.addEventListener('keydown', (e) => {
+      if (e.key !== 'Enter') return;
+      e.preventDefault();
+      createTextLayerAfterCurrent();
+    });
+    immersiveTextInput.addEventListener('input', () => {
+      applyTextLinesFromImmersiveInput();
+      immersiveTextInput.style.height = 'auto';
+      immersiveTextInput.style.height = `${Math.min(immersiveTextInput.scrollHeight, Math.round(window.innerHeight * 0.28))}px`;
+    });
+    immersiveSizeSlider.addEventListener('input', () => {
+      setCurrentTextFontSize(immersiveSizeSlider.value);
+      immersiveDirty = true;
+    });
+    immersiveColorBtn.addEventListener('click', () => toggleImmersivePopover(immersiveColorPicker, immersiveColorBtn));
+    immersiveFontBtn.addEventListener('click', () => toggleImmersivePopover(immersiveFontPicker, immersiveFontBtn));
+    immersiveStyleBtn.addEventListener('click', () => toggleImmersivePopover(immersiveStylePicker, immersiveStyleBtn));
+    immersiveAlignBtn.addEventListener('click', () => {
+      const layer = getSelectedTextLayer();
+      if (!layer) return;
+      const current = ALIGN_MODES.indexOf(layer.align || 'left');
+      layer.align = ALIGN_MODES[(current + 1) % ALIGN_MODES.length];
+      immersiveDirty = true;
+      updateImmersiveControls();
+      render();
+    });
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', setKeyboardOffset);
+      window.visualViewport.addEventListener('scroll', setKeyboardOffset);
+    }
     manageStyleBtn.addEventListener('click', () => {
       styleManager.classList.toggle('show');
       manageStyleBtn.textContent = styleManager.classList.contains('show') ? '收起风格库管理' : '管理我的风格库 ›';
@@ -2766,6 +3272,7 @@
           }
           const hit = interaction.item;
           if (hit.kind === 'text') {
+            resetSnapState();
             interaction = {
               type: 'drag-text',
               index: hit.index,
@@ -2776,6 +3283,7 @@
               pointerId: interaction.pointerId
             };
           } else {
+            resetSnapState();
             interaction = {
               type: 'drag-overlay',
               index: hit.index,
@@ -2881,11 +3389,19 @@
       clearLongPressTimer();
       interaction = null;
       activeGuides = [];
+      resetSnapState();
       if (prevType === 'press-item' && !longPressTriggered && pressItem) {
         selected = pressItem;
         multiSelected = [];
         syncControlsFromSelectedText();
-        if (pressItem.kind === 'text') openSheet('text');
+        if (pressItem.kind === 'text') {
+          const now = Date.now();
+          const isDoubleTap = lastTextTapIndex === pressItem.index && now - lastTextTapAt < 330;
+          lastTextTapAt = now;
+          lastTextTapIndex = pressItem.index;
+          if (isDoubleTap) enterImmersiveTextEdit(pressItem.index);
+          else openSheet('text');
+        }
       }
       updateMultiToolbar();
       render();
